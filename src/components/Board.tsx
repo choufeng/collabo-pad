@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback } from "react";
 import {
   ReactFlow,
   Node,
@@ -13,35 +13,155 @@ import {
   Background,
   MiniMap,
   BackgroundVariant,
-} from '@xyflow/react'
-import '@xyflow/react/dist/style.css'
+  OnConnectStart,
+  OnConnectEnd,
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
+import RightSidebar, { SidebarMode, NodeData } from "./RightSidebar";
 
-const initialNodes: Node[] = []
-const initialEdges: Edge[] = []
+const initialNodes: Node[] = [];
+const initialEdges: Edge[] = [];
 
 export default function Board() {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
-  const [nodeId, setNodeId] = useState(1)
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [nodeId, setNodeId] = useState(1);
+
+  // 侧边栏状态管理
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarMode, setSidebarMode] = useState<SidebarMode>(null);
+  const [selectedNodeId, setSelectedNodeId] = useState<string>();
+  const [connectionSource, setConnectionSource] = useState<string>();
+  const [initialNodeData, setInitialNodeData] = useState<NodeData>();
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges]
-  )
+    [setEdges],
+  );
 
-  const addNode = useCallback(() => {
-    const newNode: Node = {
-      id: `node-${nodeId}`,
-      type: 'default',
-      position: {
-        x: Math.random() * 400,
-        y: Math.random() * 400,
-      },
-      data: { label: `Node ${nodeId}` },
-    }
-    setNodes((nds) => nds.concat(newNode))
-    setNodeId((id) => id + 1)
-  }, [nodeId, setNodes])
+  // 打开侧边栏的通用函数
+  const openSidebar = useCallback(
+    (
+      mode: SidebarMode,
+      nodeId?: string,
+      sourceId?: string,
+      initialData?: NodeData,
+    ) => {
+      setSidebarMode(mode);
+      setSelectedNodeId(nodeId);
+      setConnectionSource(sourceId);
+      setInitialNodeData(initialData);
+      setSidebarOpen(true);
+    },
+    [],
+  );
+
+  // 关闭侧边栏
+  const closeSidebar = useCallback(() => {
+    setSidebarOpen(false);
+    setSidebarMode(null);
+    setSelectedNodeId(undefined);
+    setConnectionSource(undefined);
+    setInitialNodeData(undefined);
+  }, []);
+
+  // 创建节点（旧版本，现在改为打开侧边栏）
+  const openCreateSidebar = useCallback(() => {
+    openSidebar("create");
+  }, [openSidebar]);
+
+  // 保存新节点
+  const handleSaveNode = useCallback(
+    (data: NodeData) => {
+      const newNode: Node = {
+        id: `node-${nodeId}`,
+        type: "default",
+        position: {
+          x: Math.random() * 400 + 100, // 稍微偏移避免重叠
+          y: Math.random() * 400 + 100,
+        },
+        data: {
+          label: data.label,
+          content: data.content,
+        },
+      };
+
+      setNodes((nds) => nds.concat(newNode));
+      setNodeId((id) => id + 1);
+
+      // 如果是连接模式，创建连接
+      if (sidebarMode === "connection" && connectionSource) {
+        const newEdge: Edge = {
+          id: `edge-${connectionSource}-${newNode.id}`,
+          source: connectionSource,
+          target: newNode.id,
+          type: "smoothstep",
+        };
+        setEdges((eds) => eds.concat(newEdge));
+      }
+
+      closeSidebar();
+    },
+    [nodeId, setNodes, setEdges, sidebarMode, connectionSource, closeSidebar],
+  );
+
+  // 更新节点
+  const handleUpdateNode = useCallback(
+    (nodeId: string, data: NodeData) => {
+      setNodes((nds) =>
+        nds.map((node) =>
+          node.id === nodeId
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  label: data.label,
+                  content: data.content,
+                },
+              }
+            : node,
+        ),
+      );
+      closeSidebar();
+    },
+    [setNodes, closeSidebar],
+  );
+
+  // 节点点击事件
+  const onNodeClick = useCallback(
+    (event: React.MouseEvent, node: Node) => {
+      openSidebar("edit", node.id, undefined, {
+        label: node.data.label as string,
+        content: node.data.content as string,
+      });
+    },
+    [openSidebar],
+  );
+
+  // 连接开始事件
+  const onConnectStart: OnConnectStart = useCallback((event, { nodeId }) => {
+    setConnectionSource(nodeId);
+  }, []);
+
+  // 连接结束事件（在空白区域结束）
+  const onConnectEnd: OnConnectStart = useCallback(
+    (event) => {
+      // 检查是否在空白区域结束连接
+      const reactFlowBounds = (
+        event.target as HTMLElement
+      ).getBoundingClientRect();
+      const isOutOfBounds =
+        event.clientX < reactFlowBounds.left ||
+        event.clientX > reactFlowBounds.right ||
+        event.clientY < reactFlowBounds.top ||
+        event.clientY > reactFlowBounds.bottom;
+
+      if (isOutOfBounds && connectionSource) {
+        openSidebar("connection", undefined, connectionSource);
+      }
+    },
+    [connectionSource, openSidebar],
+  );
 
   return (
     <div className="w-screen h-screen relative">
@@ -51,19 +171,33 @@ export default function Board() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onNodeClick={onNodeClick}
+        onConnectStart={onConnectStart}
+        onConnectEnd={onConnectEnd}
         fitView
       >
         <Controls />
         <MiniMap />
         <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
       </ReactFlow>
-      
+
       <button
-        onClick={addNode}
+        onClick={openCreateSidebar}
         className="absolute top-4 left-4 z-10 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg shadow-lg transition-colors duration-200"
       >
         创建节点
       </button>
+
+      <RightSidebar
+        isOpen={sidebarOpen}
+        mode={sidebarMode}
+        selectedNodeId={selectedNodeId}
+        sourceNodeId={connectionSource}
+        initialData={initialNodeData}
+        onClose={closeSidebar}
+        onSaveNode={handleSaveNode}
+        onUpdateNode={handleUpdateNode}
+      />
     </div>
-  )
+  );
 }
