@@ -17,8 +17,7 @@ interface RightSidebarProps {
 }
 
 export interface NodeData {
-  label: string;
-  content?: string;
+  content: string;
 }
 
 const RightSidebar: React.FC<RightSidebarProps> = ({
@@ -62,14 +61,6 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
 
   return (
     <>
-      {/* 遮罩层 */}
-      <div
-        className={`fixed inset-0 bg-black transition-opacity duration-300 z-40 ${
-          isOpen ? "bg-opacity-50" : "bg-opacity-0 pointer-events-none"
-        }`}
-        onClick={onClose}
-      />
-
       {/* 边栏 */}
       <div
         className={`fixed right-0 top-0 h-full w-[500px] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${

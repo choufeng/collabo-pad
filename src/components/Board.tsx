@@ -81,7 +81,9 @@ export default function Board() {
           y: Math.random() * 400 + 100,
         },
         data: {
-          label: data.label,
+          label:
+            data.content.substring(0, 30) +
+            (data.content.length > 30 ? "..." : ""),
           content: data.content,
         },
       };
@@ -115,7 +117,9 @@ export default function Board() {
                 ...node,
                 data: {
                   ...node.data,
-                  label: data.label,
+                  label:
+                    data.content.substring(0, 30) +
+                    (data.content.length > 30 ? "..." : ""),
                   content: data.content,
                 },
               }
@@ -131,7 +135,6 @@ export default function Board() {
   const onNodeClick = useCallback(
     (event: React.MouseEvent, node: Node) => {
       openSidebar("edit", node.id, undefined, {
-        label: node.data.label as string,
         content: node.data.content as string,
       });
     },
