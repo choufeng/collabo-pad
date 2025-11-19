@@ -1,8 +1,11 @@
 # ui-layout Specification
 
 ## Purpose
+
 TBD - created by archiving change ui-internationalization-and-layout. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: 按钮位置可访问性
 
 系统 SHALL 确保按钮位置调整后不影响可访问性标准。
@@ -50,4 +53,3 @@ TBD - created by archiving change ui-internationalization-and-layout. Update Pur
 - **AND** 必须测试移动设备上的触摸交互
 - **AND** 必须验证按钮在小屏幕上的可见性
 - **AND** 必须测试横竖屏切换时的布局表现
-

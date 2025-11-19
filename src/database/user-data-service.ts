@@ -12,10 +12,12 @@ export class CollaboPadDB extends Dexie {
   userSessions!: Table<UserSession>;
 
   constructor() {
-    super("collaboPadDB");
+    super("collaboPadDBv2");
+
+    // 修复后的schema：使用自增主键避免键路径错误
     this.version(1).stores({
       users: "id, username, createdAt",
-      userSessions: "currentUserId, lastActiveAt",
+      userSessions: "++id, currentUserId, lastActiveAt",
     });
   }
 }
@@ -70,7 +72,8 @@ export class UserDataServiceImpl implements UserDataService {
       return null;
     }
 
-    return await this.db.users.get(session.currentUserId);
+    const user = await this.db.users.get(session.currentUserId);
+    return user || null;
   }
 
   async getLatestUsers(limit: number = 5): Promise<User[]> {
@@ -92,18 +95,27 @@ export class UserDataServiceImpl implements UserDataService {
     await this.db.userSessions.clear();
   }
 
-  private async updateSession(userId: string): Promise<void> {
-    const existingSession = await this.db.userSessions.toCollection().first();
+  private async updateSession(userId?: string): Promise<void> {
+    try {
+      const existingSession = await this.db.userSessions.toCollection().first();
 
-    const sessionData: UserSession = {
-      currentUserId: userId,
-      lastActiveAt: new Date(),
-    };
+      const sessionData: UserSession = {
+        currentUserId: userId || null,
+        lastActiveAt: new Date(),
+      };
 
-    if (existingSession) {
-      await this.db.userSessions.update(existingSession.id, sessionData);
-    } else {
-      await this.db.userSessions.add(sessionData);
+      if (existingSession && existingSession.id) {
+        // 更新现有会话记录
+        await this.db.userSessions.put(sessionData, existingSession.id);
+      } else {
+        // 创建新会话记录
+        await this.db.userSessions.add(sessionData);
+      }
+    } catch (error) {
+      console.error("Failed to update user session:", error);
+      throw new Error(
+        `会话更新失败: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }
 

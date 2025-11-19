@@ -1,8 +1,11 @@
 # internationalization Specification
 
 ## Purpose
+
 TBD - created by archiving change ui-internationalization-and-layout. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: 文本内容英文化
 
 系统 SHALL 将所有用户界面的中文文本内容直接替换为对应的英文文本。
@@ -161,4 +164,3 @@ TBD - created by archiving change ui-internationalization-and-layout. Update Pur
 - **AND** 必须确保语法和拼写的正确性
 - **AND** 必须保持用户指导的清晰性
 - **AND** 必须定期审查和更新文本内容
-

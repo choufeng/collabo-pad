@@ -8,9 +8,7 @@ interface NodeEditorProps {
   selectedNodeId?: string;
   sourceNodeId?: string;
   initialData?: NodeData; // 新增：用于编辑模式的初始数据
-  onSave:
-    | ((data: NodeData) => void)
-    | ((nodeId: string, data: NodeData) => void);
+  onSave: (nodeId: string | NodeData, data?: NodeData) => void;
   onCancel: () => void;
 }
 

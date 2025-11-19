@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   ReactFlow,
   Node,
@@ -14,12 +14,25 @@ import {
   MiniMap,
   BackgroundVariant,
   OnConnectStart,
+  NodeTypes,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import RightSidebar, { SidebarMode, NodeData } from "./RightSidebar";
+import CustomNode from "./CustomNode";
+import {
+  ExtendedNode,
+  createChildNodeData,
+  updateParentChildRelation,
+  createParentChildEdge,
+} from "@/utils/node-hierarchy";
 
 const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
+
+// 注册自定义节点类型
+const nodeTypes: NodeTypes = {
+  custom: CustomNode,
+};
 
 export default function Board() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -33,6 +46,9 @@ export default function Board() {
   const [connectionSource, setConnectionSource] = useState<string>();
   const [initialNodeData, setInitialNodeData] = useState<NodeData>();
 
+  // 子评论相关状态
+  const [parentNodeData, setParentNodeData] = useState<NodeData>();
+
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
     [setEdges],
@@ -45,11 +61,13 @@ export default function Board() {
       nodeId?: string,
       sourceId?: string,
       initialData?: NodeData,
+      parentData?: NodeData,
     ) => {
       setSidebarMode(mode);
       setSelectedNodeId(nodeId);
       setConnectionSource(sourceId);
       setInitialNodeData(initialData);
+      setParentNodeData(parentData);
       setSidebarOpen(true);
     },
     [],
@@ -62,6 +80,7 @@ export default function Board() {
     setSelectedNodeId(undefined);
     setConnectionSource(undefined);
     setInitialNodeData(undefined);
+    setParentNodeData(undefined);
   }, []);
 
   // 创建节点（旧版本，现在改为打开侧边栏）
@@ -69,41 +88,123 @@ export default function Board() {
     openSidebar("create");
   }, [openSidebar]);
 
+  // 处理"+"按钮点击，打开子评论创建侧边栏
+  const handleAddChildNode = useCallback(
+    (parentNodeId: string) => {
+      const parentNode = nodes.find((node) => node.id === parentNodeId);
+      if (!parentNode) return;
+
+      // 获取父节点数据
+      const parentData: NodeData = {
+        content: parentNode.data.content as string,
+        parentId: parentNode.data.parentId as string | undefined,
+        level: parentNode.data.level as number | undefined,
+        childIds: parentNode.data.childIds as string[] | undefined,
+      };
+
+      // 打开子评论创建侧边栏
+      openSidebar("child-comment", undefined, undefined, undefined, parentData);
+    },
+    [nodes, openSidebar],
+  );
+
   // 保存新节点
   const handleSaveNode = useCallback(
     (data: NodeData) => {
-      const newNode: Node = {
-        id: `node-${nodeId}`,
-        type: "default",
-        position: {
-          x: Math.random() * 400 + 100, // 稍微偏移避免重叠
-          y: Math.random() * 400 + 100,
-        },
-        data: {
-          label:
-            data.content.substring(0, 30) +
-            (data.content.length > 30 ? "..." : ""),
-          content: data.content,
-        },
-      };
+      let newNode: Node;
 
-      setNodes((nds) => nds.concat(newNode));
-      setNodeId((id) => id + 1);
+      if (sidebarMode === "child-comment" && parentNodeData) {
+        // 子评论模式：创建子节点
+        const parentNode = nodes.find(
+          (node) => node.data.content === parentNodeData.content,
+        );
 
-      // 如果是连接模式，创建连接
-      if (sidebarMode === "connection" && connectionSource) {
-        const newEdge: Edge = {
-          id: `edge-${connectionSource}-${newNode.id}`,
-          source: connectionSource,
-          target: newNode.id,
-          type: "smoothstep",
+        if (!parentNode) {
+          console.error("父节点未找到");
+          return;
+        }
+
+        // 创建子节点数据
+        const childNodeData = createChildNodeData(
+          parentNode as ExtendedNode,
+          data.content,
+          nodes as ExtendedNode[],
+        );
+
+        newNode = {
+          id: `node-${nodeId}`,
+          type: "custom",
+          position: childNodeData.position,
+          data: {
+            ...childNodeData.data,
+            onAddChild: handleAddChildNode, // 传递回调函数
+          },
         };
-        setEdges((eds) => eds.concat(newEdge));
+
+        // 更新父子节点关系
+        const updatedNodes = updateParentChildRelation(
+          parentNode as ExtendedNode,
+          newNode as ExtendedNode,
+          nodes as ExtendedNode[],
+        );
+
+        setNodes(updatedNodes);
+
+        // 创建父子连接线
+        const parentChildEdge = createParentChildEdge(
+          parentNode as ExtendedNode,
+          newNode as ExtendedNode,
+          edges,
+        );
+        setEdges((eds) => eds.concat(parentChildEdge));
+      } else {
+        // 普通创建模式
+        newNode = {
+          id: `node-${nodeId}`,
+          type: "custom",
+          position: {
+            x: Math.random() * 400 + 100, // 稍微偏移避免重叠
+            y: Math.random() * 400 + 100,
+          },
+          data: {
+            label:
+              data.content.substring(0, 30) +
+              (data.content.length > 30 ? "..." : ""),
+            content: data.content,
+            level: 0, // 顶级节点
+            onAddChild: handleAddChildNode, // 传递回调函数
+          },
+        };
+
+        setNodes((nds) => nds.concat(newNode));
+
+        // 如果是连接模式，创建连接
+        if (sidebarMode === "connection" && connectionSource) {
+          const newEdge: Edge = {
+            id: `edge-${connectionSource}-${newNode.id}`,
+            source: connectionSource,
+            target: newNode.id,
+            type: "smoothstep",
+          };
+          setEdges((eds) => eds.concat(newEdge));
+        }
       }
 
+      setNodeId((id) => id + 1);
       closeSidebar();
     },
-    [nodeId, setNodes, setEdges, sidebarMode, connectionSource, closeSidebar],
+    [
+      nodeId,
+      nodes,
+      edges,
+      sidebarMode,
+      connectionSource,
+      parentNodeData,
+      setNodes,
+      setEdges,
+      closeSidebar,
+      handleAddChildNode,
+    ],
   );
 
   // 更新节点
@@ -142,21 +243,27 @@ export default function Board() {
 
   // 连接开始事件
   const onConnectStart: OnConnectStart = useCallback((event, { nodeId }) => {
-    setConnectionSource(nodeId);
+    setConnectionSource(nodeId || undefined);
   }, []);
 
   // 连接结束事件（在空白区域结束）
   const onConnectEnd = useCallback(
-    (event) => {
+    (event: MouseEvent | TouchEvent) => {
+      // 获取坐标位置（支持鼠标和触摸事件）
+      const clientX =
+        "touches" in event ? event.touches[0]?.clientX || 0 : event.clientX;
+      const clientY =
+        "touches" in event ? event.touches[0]?.clientY || 0 : event.clientY;
+
       // 检查是否在空白区域结束连接
       const reactFlowBounds = (
         event.target as HTMLElement
       ).getBoundingClientRect();
       const isOutOfBounds =
-        event.clientX < reactFlowBounds.left ||
-        event.clientX > reactFlowBounds.right ||
-        event.clientY < reactFlowBounds.top ||
-        event.clientY > reactFlowBounds.bottom;
+        clientX < reactFlowBounds.left ||
+        clientX > reactFlowBounds.right ||
+        clientY < reactFlowBounds.top ||
+        clientY > reactFlowBounds.bottom;
 
       if (isOutOfBounds && connectionSource) {
         openSidebar("connection", undefined, connectionSource);
@@ -170,6 +277,7 @@ export default function Board() {
       <ReactFlow
         nodes={nodes}
         edges={edges}
+        nodeTypes={nodeTypes}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
@@ -198,6 +306,7 @@ export default function Board() {
         selectedNodeId={selectedNodeId}
         sourceNodeId={connectionSource}
         initialData={initialNodeData}
+        parentNodeData={parentNodeData}
         onClose={closeSidebar}
         onSaveNode={handleSaveNode}
         onUpdateNode={handleUpdateNode}

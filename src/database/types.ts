@@ -10,6 +10,7 @@ export interface User {
 }
 
 export interface UserSession {
+  id?: number; // 自增主键
   currentUserId: string | null;
   lastActiveAt: Date;
 }

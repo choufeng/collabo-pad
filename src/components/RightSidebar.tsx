@@ -3,13 +3,19 @@
 import React, { useEffect } from "react";
 import NodeEditor from "./NodeEditor";
 
-export type SidebarMode = "create" | "edit" | "connection" | null;
+export type SidebarMode =
+  | "create"
+  | "edit"
+  | "connection"
+  | "child-comment"
+  | null;
 
 interface RightSidebarProps {
   isOpen: boolean;
   mode: SidebarMode;
   selectedNodeId?: string;
   sourceNodeId?: string; // 用于连接线模式
+  parentNodeData?: NodeData; // 子评论模式的父节点数据
   initialData?: NodeData; // 编辑模式的初始数据
   onClose: () => void;
   onSaveNode: (data: NodeData) => void;
@@ -18,6 +24,9 @@ interface RightSidebarProps {
 
 export interface NodeData {
   content: string;
+  parentId?: string; // 父节点ID
+  level?: number; // 节点层级，0为顶级节点
+  childIds?: string[]; // 子节点ID列表
 }
 
 const RightSidebar: React.FC<RightSidebarProps> = ({
@@ -25,6 +34,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   mode,
   selectedNodeId,
   sourceNodeId,
+  parentNodeData,
   initialData,
   onClose,
   onSaveNode,
@@ -54,6 +64,8 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
         return "Edit Topic";
       case "connection":
         return "Create Connected Topic";
+      case "child-comment":
+        return "Add Child Comment";
       default:
         return "Topic Editor";
     }
@@ -118,6 +130,27 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                 />
               </svg>
             )}
+            {mode === "child-comment" && (
+              <svg
+                className="w-5 h-5 mr-2 text-purple-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 8h8"
+                />
+              </svg>
+            )}
             {getTitle()}
           </h2>
           <button
@@ -149,7 +182,15 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
               selectedNodeId={selectedNodeId}
               sourceNodeId={sourceNodeId}
               initialData={initialData}
-              onSave={mode === "edit" ? onUpdateNode : onSaveNode}
+              onSave={(nodeIdOrData, data) => {
+                if (typeof nodeIdOrData === "string" && data) {
+                  // 编辑模式：调用 onUpdateNode
+                  onUpdateNode(nodeIdOrData, data);
+                } else {
+                  // 创建模式：调用 onSaveNode
+                  onSaveNode(nodeIdOrData as NodeData);
+                }
+              }}
               onCancel={onClose}
             />
           </div>
