@@ -1,12 +1,12 @@
 /**
  * 用户状态管理
- * 基于 Zustand 的用户状态 Store
+ * 基于 Zustand 和简化用户数据服务的用户状态 Store
  */
 
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { User } from "../database/types";
-import { databaseService } from "../database/database-service";
+import { userDataService } from "../database/user-data-service";
 
 // 用户状态接口
 export interface UserState {
@@ -21,9 +21,7 @@ export interface UserState {
   setError: (error: string | null) => void;
 
   // 异步操作
-  createOrUpdateUser: (
-    userData: Omit<User, "id" | "createdAt" | "updatedAt">,
-  ) => Promise<void>;
+  createOrGetUser: (username: string) => Promise<void>;
   loadCurrentUser: () => Promise<void>;
   clearCurrentUser: () => Promise<void>;
 
@@ -43,18 +41,6 @@ export const useUserStore = create<UserState>()(
       // 基础操作方法
       setCurrentUser: (user: User | null) => {
         set({ currentUser: user }, false, "setCurrentUser");
-
-        // 异步持久化到数据库会话
-        if (user) {
-          // 使用防抖避免频繁写入
-          setTimeout(() => {
-            databaseService
-              .updateUserSession({
-                currentUserId: user.id,
-              })
-              .catch(console.error);
-          }, 100);
-        }
       },
 
       setLoading: (loading: boolean) => {
@@ -66,14 +52,14 @@ export const useUserStore = create<UserState>()(
       },
 
       // 异步操作
-      createOrUpdateUser: async (userData) => {
+      createOrGetUser: async (username: string) => {
         const { setLoading, setError, setCurrentUser } = get();
 
         try {
           setLoading(true);
           setError(null);
 
-          const user = await databaseService.createUser(userData);
+          const user = await userDataService.createOrGetUser(username);
           setCurrentUser(user);
         } catch (error) {
           const errorMessage =
@@ -92,19 +78,8 @@ export const useUserStore = create<UserState>()(
           setLoading(true);
           setError(null);
 
-          // 获取会话信息
-          const session = await databaseService.getUserSession();
-
-          if (session.currentUserId) {
-            // 加载用户数据
-            const user = await databaseService.getUser(session.currentUserId);
-            if (user) {
-              setCurrentUser(user);
-            } else {
-              // 用户不存在，清除会话
-              await databaseService.clearUserSession();
-            }
-          }
+          const user = await userDataService.getCurrentUser();
+          setCurrentUser(user);
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : "用户加载失败";
@@ -121,7 +96,7 @@ export const useUserStore = create<UserState>()(
           setLoading(true);
           setError(null);
 
-          await databaseService.clearUserSession();
+          await userDataService.clearUserData();
           set({ currentUser: null }, false, "clearCurrentUser");
         } catch (error) {
           const errorMessage =

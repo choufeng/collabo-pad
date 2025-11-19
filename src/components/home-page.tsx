@@ -28,7 +28,7 @@ export function HomePage() {
     currentUser,
     isLoading: userLoading,
     error: userError,
-    createOrUpdateUser,
+    createOrGetUser,
   } = useUserStore();
 
   const {
@@ -106,15 +106,12 @@ export function HomePage() {
     setIsSubmitting(true);
 
     try {
-      // 创建用户
-      const user = await createOrUpdateUser({
-        username: formData.username.trim(),
-      });
+      // 创建或获取用户（新的简化API）
+      await createOrGetUser(formData.username.trim());
 
       // 创建频道
       const channel = await createChannel({
         id: formData.channelId.trim(),
-        userId: user.id,
       });
 
       // 跳转到画板页面
