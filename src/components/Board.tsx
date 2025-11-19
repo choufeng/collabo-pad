@@ -231,6 +231,50 @@ export default function Board() {
     [setNodes, closeSidebar],
   );
 
+  // 创建子节点
+  const handleCreateChildNode = useCallback(
+    async (parentId: string, content: string) => {
+      const parentNode = nodes.find((node) => node.id === parentId);
+      if (!parentNode) {
+        throw new Error("Parent node not found");
+      }
+
+      // 创建子节点数据
+      const childNodeData = createChildNodeData(
+        parentNode as ExtendedNode,
+        content,
+        nodes as ExtendedNode[],
+        "currentUser", // 可以从用户上下文获取
+      );
+
+      const newNode: Node = {
+        id: `node-${nodeId}`,
+        type: "custom",
+        position: childNodeData.position,
+        data: {
+          ...childNodeData.data,
+          onAddChild: handleAddChildNode,
+        },
+      };
+
+      // 更新父子节点关系
+      const updatedNodes = updateParentChildRelation(
+        parentNode as ExtendedNode,
+        newNode as ExtendedNode,
+        nodes as ExtendedNode[],
+      );
+
+      // 创建连接线
+      const newEdge = createParentChildEdge(parentId, newNode.id);
+
+      // 更新状态
+      setNodes(updatedNodes);
+      setEdges((eds) => [...eds, newEdge]);
+      setNodeId((id) => id + 1);
+    },
+    [nodes, handleAddChildNode, setNodes, setEdges],
+  );
+
   // 节点点击事件
   const onNodeClick = useCallback(
     (event: React.MouseEvent, node: Node) => {
@@ -310,6 +354,7 @@ export default function Board() {
         onClose={closeSidebar}
         onSaveNode={handleSaveNode}
         onUpdateNode={handleUpdateNode}
+        onCreateChildNode={handleCreateChildNode}
       />
     </div>
   );

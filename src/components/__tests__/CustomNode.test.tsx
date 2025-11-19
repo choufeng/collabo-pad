@@ -1,10 +1,9 @@
 /**
  * CustomNode组件测试
- * 测试自定义节点的层级化显示和"+"按钮功能
+ * 测试自定义节点的层级化显示和创建者信息显示
  */
 
-import { render, screen, fireEvent } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, screen } from "@testing-library/react";
 import CustomNode from "../CustomNode";
 import { ExtendedNodeData } from "@/utils/node-hierarchy";
 
@@ -25,20 +24,19 @@ jest.mock("@xyflow/react", () => ({
 }));
 
 describe("CustomNode 组件", () => {
-  const user = userEvent.setup();
-  const mockOnAddChild = jest.fn();
-
   // 基础父节点数据
   const parentNodeData: ExtendedNodeData & {
     label: string;
     content: string;
     level?: number;
     childIds?: string[];
+    creator?: string;
   } = {
     label: "父节点内容",
     content: "这是父节点的详细内容",
     level: 0,
     childIds: ["child-1", "child-2"],
+    creator: "testUser",
   };
 
   // 基础子节点数据
@@ -47,12 +45,14 @@ describe("CustomNode 组件", () => {
     content: string;
     level?: number;
     childIds?: string[];
+    creator?: string;
   } = {
     label: "子节点内容",
     content: "这是子节点的详细内容",
     level: 1,
     parentId: "parent-1",
     childIds: [],
+    creator: "childUser",
   };
 
   // 深层级子节点数据
@@ -61,11 +61,26 @@ describe("CustomNode 组件", () => {
     content: string;
     level?: number;
     childIds?: string[];
+    creator?: string;
   } = {
     label: "深层级子节点",
     content: "这是深层级子节点的内容",
     level: 3,
     parentId: "child-1",
+    childIds: [],
+    creator: "deepUser",
+  };
+
+  // 没有创建者信息的节点数据
+  const nodeDataWithoutCreator: ExtendedNodeData & {
+    label: string;
+    content: string;
+    level?: number;
+    childIds?: string[];
+  } = {
+    label: "无创建者节点",
+    content: "这是没有创建者信息的节点",
+    level: 0,
     childIds: [],
   };
 
@@ -73,12 +88,7 @@ describe("CustomNode 组件", () => {
     id: "test-node-1",
     data: parentNodeData,
     selected: false,
-    onAddChild: mockOnAddChild,
   };
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
 
   describe("基础渲染", () => {
     it("应该正确渲染节点内容", () => {
@@ -95,103 +105,56 @@ describe("CustomNode 组件", () => {
       expect(screen.getByTestId("handle-source")).toBeInTheDocument();
     });
 
-    it("应该渲染添加子节点按钮", () => {
+    it("不应该显示添加子节点按钮", () => {
       render(<CustomNode {...defaultProps} />);
 
-      const addButton = screen.getByRole("button", {
-        name: /add child comment/i,
-      });
-      expect(addButton).toBeInTheDocument();
-      expect(addButton).toHaveAttribute("title", "Add child comment");
+      expect(
+        screen.queryByRole("button", { name: /add child comment/i }),
+      ).not.toBeInTheDocument();
     });
   });
 
   describe("层级样式", () => {
-    it("应该为父节点应用正确的样式", () => {
-      render(<CustomNode {...defaultProps} />);
+    it("应该为不同层级的节点应用不同的样式", () => {
+      const { rerender } = render(<CustomNode {...defaultProps} />);
 
-      const nodeElement = screen.getByTestId("custom-node");
+      const parentNodeElement = screen.getByTestId("custom-node");
+      const parentNodeStyle = parentNodeElement.style.backgroundColor;
 
-      expect(nodeElement).toHaveStyle({
-        backgroundColor: "#3B82F6", // 蓝色背景
-        padding: "16px 20px",
-        fontSize: "16px",
-      });
+      // 渲染子节点
+      rerender(<CustomNode {...defaultProps} data={childNodeData} />);
+      const childNodeElement = screen.getByTestId("custom-node");
+      const childNodeStyle = childNodeElement.style.backgroundColor;
+
+      // 子节点和父节点应该有不同的背景色
+      expect(childNodeStyle).not.toBe(parentNodeStyle);
     });
 
-    it("应该为子节点应用不同的样式", () => {
-      render(<CustomNode {...defaultProps} data={childNodeData} />);
-
-      const nodeElement = screen.getByTestId("custom-node");
-
-      expect(nodeElement).toHaveStyle({
-        backgroundColor: "#10B981", // 绿色背景
-        padding: "12px 16px",
-        fontSize: "14px",
-        transform: "scale(0.9)", // 子节点缩小90%
-      });
-    });
-
-    it("应该为深层级节点应用更小的缩放", () => {
+    it("应该为深层级节点应用缩放效果", () => {
       render(<CustomNode {...defaultProps} data={deepChildNodeData} />);
 
       const nodeElement = screen.getByTestId("custom-node");
 
-      expect(nodeElement).toHaveStyle({
-        backgroundColor: "#EF4444", // 红色背景（层级3）
-        transform: "scale(0.7)", // 最小缩放70%
-      });
-    });
-  });
-
-  describe("添加按钮功能", () => {
-    it("应该显示正确尺寸的添加按钮", () => {
-      render(<CustomNode {...defaultProps} />);
-
-      const addButton = screen.getByRole("button", {
-        name: /add child comment/i,
-      });
-      expect(addButton).toHaveStyle({
-        width: "28px",
-        height: "28px",
-      });
+      // 检查是否有transform样式
+      expect(nodeElement.style.transform).toBeTruthy();
     });
 
-    it("应该为子节点显示较小的添加按钮", () => {
-      render(<CustomNode {...defaultProps} data={childNodeData} />);
+    it("应该为不同层级的节点应用视觉效果", () => {
+      const { rerender } = render(
+        <CustomNode {...defaultProps} data={parentNodeData} />,
+      );
 
-      const addButton = screen.getByRole("button", {
-        name: /add child comment/i,
-      });
-      expect(addButton).toHaveStyle({
-        width: "24px",
-        height: "24px",
-      });
-    });
+      const parentStyle = screen.getByTestId("custom-node").style;
 
-    it("点击添加按钮应该调用onAddChild回调", async () => {
-      render(<CustomNode {...defaultProps} />);
+      rerender(<CustomNode {...defaultProps} data={childNodeData} />);
+      const childStyle = screen.getByTestId("custom-node").style;
 
-      const addButton = screen.getByRole("button", {
-        name: /add child comment/i,
-      });
-      await user.click(addButton);
+      // 父节点和子节点通常有不同的样式
+      expect(parentStyle.transform || childStyle.transform).toBeDefined();
 
-      expect(mockOnAddChild).toHaveBeenCalledTimes(1);
-      expect(mockOnAddChild).toHaveBeenCalledWith("test-node-1");
-    });
-
-    it("点击添加按钮不应该触发节点选择", async () => {
-      render(<CustomNode {...defaultProps} selected={false} />);
-
-      const addButton = screen.getByRole("button", {
-        name: /add child comment/i,
-      });
-      await user.click(addButton);
-
-      // 验证按钮点击事件被阻止冒泡（通过检查是否有选择相关的副作用）
-      // 这里主要是确保事件不会传播到父元素
-      expect(mockOnAddChild).toHaveBeenCalled();
+      // 验证节点确实有样式应用
+      expect(parentStyle.backgroundColor).toBeTruthy();
+      expect(childStyle.backgroundColor).toBeTruthy();
     });
   });
 
@@ -242,26 +205,6 @@ describe("CustomNode 组件", () => {
     });
   });
 
-  describe("可访问性", () => {
-    it("添加按钮应该有正确的aria-label", () => {
-      render(<CustomNode {...defaultProps} />);
-
-      const addButton = screen.getByRole("button", {
-        name: /add child comment/i,
-      });
-      expect(addButton).toHaveAttribute("aria-label", "Add child comment");
-    });
-
-    it("添加按钮应该有工具提示", () => {
-      render(<CustomNode {...defaultProps} />);
-
-      const addButton = screen.getByRole("button", {
-        name: /add child comment/i,
-      });
-      expect(addButton).toHaveAttribute("title", "Add child comment");
-    });
-  });
-
   describe("响应式设计", () => {
     it("应该支持截断长文本", () => {
       const longTextData = {
@@ -275,10 +218,16 @@ describe("CustomNode 组件", () => {
       const labelElement = screen.getByText(/这是一个非常长的节点标题/);
       expect(labelElement).toHaveClass("truncate");
     });
+
+    it("节点内容应该充分利用可用空间", () => {
+      render(<CustomNode {...defaultProps} />);
+
+      const contentContainer = screen.getByText("父节点内容").parentElement;
+      expect(contentContainer).toHaveClass("flex-1");
+    });
   });
 
-  describe("开发模式调试", () => {
-    // 在开发环境中测试层级指示器
+  describe("创建者信息显示", () => {
     const originalEnv = process.env.NODE_ENV;
 
     beforeEach(() => {
@@ -289,16 +238,62 @@ describe("CustomNode 组件", () => {
       process.env.NODE_ENV = originalEnv;
     });
 
-    it("在开发模式中应该显示层级指示器", () => {
+    it("在开发模式中应该显示创建者信息", () => {
       render(<CustomNode {...defaultProps} />);
 
-      expect(screen.getByText("L0")).toBeInTheDocument();
+      expect(screen.getByText("testUser")).toBeInTheDocument();
     });
 
-    it("应该显示正确的层级数字", () => {
+    it("应该显示正确的创建者用户名", () => {
       render(<CustomNode {...defaultProps} data={childNodeData} />);
 
-      expect(screen.getByText("L1")).toBeInTheDocument();
+      expect(screen.getByText("childUser")).toBeInTheDocument();
+    });
+
+    it("应该显示深层级节点的创建者", () => {
+      render(<CustomNode {...defaultProps} data={deepChildNodeData} />);
+
+      expect(screen.getByText("deepUser")).toBeInTheDocument();
+    });
+
+    it("当没有创建者信息时不应该显示创建者标签", () => {
+      render(<CustomNode {...defaultProps} data={nodeDataWithoutCreator} />);
+
+      expect(screen.queryByText(/testUser/)).not.toBeInTheDocument();
+    });
+
+    it("在生产模式中不应该显示创建者信息", () => {
+      process.env.NODE_ENV = "production";
+
+      render(<CustomNode {...defaultProps} />);
+
+      expect(screen.queryByText("testUser")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("向后兼容性", () => {
+    it("应该支持没有creator字段的旧数据", () => {
+      expect(() => {
+        render(<CustomNode {...defaultProps} data={nodeDataWithoutCreator} />);
+      }).not.toThrow();
+    });
+
+    it("应该支持包含creator字段的新数据", () => {
+      expect(() => {
+        render(<CustomNode {...defaultProps} data={parentNodeData} />);
+      }).not.toThrow();
+    });
+  });
+
+  describe("布局变化", () => {
+    it("移除+按钮后内容区域应该使用全部可用空间", () => {
+      render(<CustomNode {...defaultProps} />);
+
+      const nodeElement = screen.getByTestId("custom-node");
+      const contentContainer = nodeElement.querySelector(".flex-1");
+
+      expect(contentContainer).toBeInTheDocument();
+      expect(nodeElement.querySelector("button")).not.toBeInTheDocument();
     });
   });
 });

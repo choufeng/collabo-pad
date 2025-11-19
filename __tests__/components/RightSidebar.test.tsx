@@ -17,6 +17,7 @@ jest.mock("../../src/components/NodeEditor", () => {
     initialData,
     onSave,
     onCancel,
+    onCreateChildNode,
   }: any) {
     return React.createElement("div", { "data-testid": "node-editor" }, [
       React.createElement("div", { key: "mode" }, `Mode: ${mode}`),
@@ -62,6 +63,21 @@ jest.mock("../../src/components/NodeEditor", () => {
         },
         "Cancel",
       ),
+      // 创建子节点按钮（仅在编辑模式且有onCreateChildNode回调时显示）
+      mode === "edit" &&
+        onCreateChildNode &&
+        React.createElement(
+          "button",
+          {
+            key: "create-child",
+            onClick: () => {
+              if (selectedNodeId) {
+                onCreateChildNode(selectedNodeId, "child content");
+              }
+            },
+          },
+          "Create Child",
+        ),
     ]);
   };
 
@@ -341,6 +357,88 @@ describe("RightSidebar组件", () => {
     });
   });
 
+  describe("子节点创建功能", () => {
+    it("应该在编辑模式显示创建子节点按钮（当有onCreateChildNode回调时）", () => {
+      const onCreateChildNode = jest.fn();
+      render(
+        <RightSidebar
+          {...defaultProps}
+          isOpen={true}
+          mode="edit"
+          selectedNodeId="parent-node-123"
+          onCreateChildNode={onCreateChildNode}
+        />,
+      );
+
+      expect(screen.getByText("Create Child")).toBeInTheDocument();
+    });
+
+    it("应该在不支持的模式下隐藏创建子节点按钮", () => {
+      const onCreateChildNode = jest.fn();
+      render(
+        <RightSidebar
+          {...defaultProps}
+          isOpen={true}
+          mode="create"
+          onCreateChildNode={onCreateChildNode}
+        />,
+      );
+
+      expect(screen.queryByText("Create Child")).not.toBeInTheDocument();
+    });
+
+    it("应该在没有onCreateChildNode回调时隐藏创建子节点按钮", () => {
+      render(
+        <RightSidebar
+          {...defaultProps}
+          isOpen={true}
+          mode="edit"
+          selectedNodeId="parent-node-123"
+        />,
+      );
+
+      expect(screen.queryByText("Create Child")).not.toBeInTheDocument();
+    });
+
+    it("点击创建子节点按钮应该调用onCreateChildNode回调", () => {
+      const onCreateChildNode = jest.fn();
+      render(
+        <RightSidebar
+          {...defaultProps}
+          isOpen={true}
+          mode="edit"
+          selectedNodeId="parent-node-123"
+          onCreateChildNode={onCreateChildNode}
+        />,
+      );
+
+      const createChildButton = screen.getByText("Create Child");
+      fireEvent.click(createChildButton);
+
+      expect(onCreateChildNode).toHaveBeenCalledWith(
+        "parent-node-123",
+        "child content",
+      );
+    });
+
+    it("应该正确传递onCreateChildNode回调给NodeEditor", () => {
+      const onCreateChildNode = jest.fn();
+      render(
+        <RightSidebar
+          {...defaultProps}
+          isOpen={true}
+          mode="edit"
+          selectedNodeId="parent-node-123"
+          onCreateChildNode={onCreateChildNode}
+        />,
+      );
+
+      // 验证NodeEditor的mock组件能够接收到onCreateChildNode回调
+      const createChildButton = screen.getByText("Create Child");
+      expect(createChildButton).toBeInTheDocument();
+    });
+  });
+
   describe("错误处理", () => {
     it("应该处理缺失的回调函数", () => {
       expect(() => {
@@ -364,6 +462,19 @@ describe("RightSidebar组件", () => {
             isOpen={true}
             mode="edit"
             initialData={undefined}
+          />,
+        );
+      }).not.toThrow();
+    });
+
+    it("应该处理缺失的onCreateChildNode回调", () => {
+      expect(() => {
+        render(
+          <RightSidebar
+            {...defaultProps}
+            isOpen={true}
+            mode="edit"
+            selectedNodeId="parent-node-123"
           />,
         );
       }).not.toThrow();

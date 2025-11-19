@@ -20,6 +20,7 @@ interface RightSidebarProps {
   onClose: () => void;
   onSaveNode: (data: NodeData) => void;
   onUpdateNode: (nodeId: string, data: NodeData) => void;
+  onCreateChildNode?: (parentId: string, content: string) => void; // 创建子节点的回调
 }
 
 export interface NodeData {
@@ -27,6 +28,7 @@ export interface NodeData {
   parentId?: string; // 父节点ID
   level?: number; // 节点层级，0为顶级节点
   childIds?: string[]; // 子节点ID列表
+  creator?: string; // 节点创建者用户名
 }
 
 const RightSidebar: React.FC<RightSidebarProps> = ({
@@ -39,6 +41,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   onClose,
   onSaveNode,
   onUpdateNode,
+  onCreateChildNode,
 }) => {
   // ESC 键关闭边栏
   useEffect(() => {
@@ -192,6 +195,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                 }
               }}
               onCancel={onClose}
+              onCreateChildNode={onCreateChildNode}
             />
           </div>
         </div>

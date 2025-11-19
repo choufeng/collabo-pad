@@ -11,6 +11,7 @@ export interface ExtendedNodeData extends NodeData {
   parentId?: string; // 父节点ID
   level?: number; // 节点层级，0为顶级节点
   childIds?: string[]; // 子节点ID列表
+  creator?: string; // 节点创建者用户名
 }
 
 // 扩展节点类型
@@ -22,6 +23,7 @@ export interface ExtendedNode extends Node {
       parentId?: string;
       level?: number;
       childIds?: string[];
+      creator?: string;
     };
 }
 
@@ -180,12 +182,14 @@ export function validateParentChildRelation(
  * @param parentNode 父节点
  * @param content 子节点内容
  * @param nodes 所有节点列表（用于计算位置）
+ * @param creator 可选的创建者用户名
  * @returns 子节点对象
  */
 export function createChildNodeData(
   parentNode: ExtendedNode,
   content: string,
   nodes: ExtendedNode[],
+  creator?: string,
 ): Omit<ExtendedNode, "id"> {
   const parentLevel = parentNode.data.level || 0;
   const childLevel = parentLevel + 1;
@@ -207,6 +211,7 @@ export function createChildNodeData(
       parentId: parentNode.id,
       level: childLevel,
       childIds: [],
+      creator,
     },
   };
 }

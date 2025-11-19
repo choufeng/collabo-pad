@@ -345,4 +345,274 @@ describe("NodeEditor组件", () => {
       ).toBeInTheDocument();
     });
   });
+
+  describe("子节点创建功能", () => {
+    const mockOnCreateChildNode = jest.fn();
+
+    beforeEach(() => {
+      mockOnCreateChildNode.mockClear();
+    });
+
+    it("在编辑模式下应该显示子节点创建表单", () => {
+      render(
+        <NodeEditor
+          {...defaultProps}
+          mode="edit"
+          selectedNodeId="parent-node-123"
+          onCreateChildNode={mockOnCreateChildNode}
+        />,
+      );
+
+      expect(screen.getByText("Add Child Topic")).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText("Enter child topic content..."),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Create Child Topic" }),
+      ).toBeInTheDocument();
+    });
+
+    it("在非编辑模式下不应该显示子节点创建表单", () => {
+      render(
+        <NodeEditor
+          {...defaultProps}
+          mode="create"
+          onCreateChildNode={mockOnCreateChildNode}
+        />,
+      );
+
+      expect(screen.queryByText("Add Child Topic")).not.toBeInTheDocument();
+      expect(
+        screen.queryByPlaceholderText("Enter child topic content..."),
+      ).not.toBeInTheDocument();
+    });
+
+    it("没有onCreateChildNode回调时不应该显示子节点创建表单", () => {
+      render(<NodeEditor {...defaultProps} mode="edit" />);
+
+      expect(screen.queryByText("Add Child Topic")).not.toBeInTheDocument();
+      expect(
+        screen.queryByPlaceholderText("Enter child topic content..."),
+      ).not.toBeInTheDocument();
+    });
+
+    it("应该正确处理子节点创建", async () => {
+      mockOnCreateChildNode.mockResolvedValue(undefined);
+
+      render(
+        <NodeEditor
+          {...defaultProps}
+          mode="edit"
+          selectedNodeId="parent-node-123"
+          onCreateChildNode={mockOnCreateChildNode}
+        />,
+      );
+
+      const childTextarea = screen.getByPlaceholderText(
+        "Enter child topic content...",
+      );
+      const createButton = screen.getByRole("button", {
+        name: "Create Child Topic",
+      });
+
+      fireEvent.change(childTextarea, {
+        target: { value: "新的子节点内容" },
+      });
+      fireEvent.click(createButton);
+
+      await waitFor(() => {
+        expect(mockOnCreateChildNode).toHaveBeenCalledTimes(1);
+        expect(mockOnCreateChildNode).toHaveBeenCalledWith(
+          "parent-node-123",
+          "新的子节点内容",
+        );
+      });
+    });
+
+    it("创建子节点后应该清空表单", async () => {
+      mockOnCreateChildNode.mockResolvedValue(undefined);
+
+      render(
+        <NodeEditor
+          {...defaultProps}
+          mode="edit"
+          selectedNodeId="parent-node-123"
+          onCreateChildNode={mockOnCreateChildNode}
+        />,
+      );
+
+      const childTextarea = screen.getByPlaceholderText(
+        "Enter child topic content...",
+      );
+      const createButton = screen.getByRole("button", {
+        name: "Create Child Topic",
+      });
+
+      fireEvent.change(childTextarea, {
+        target: { value: "新的子节点内容" },
+      });
+      fireEvent.click(createButton);
+
+      await waitFor(() => {
+        expect(childTextarea).toHaveValue("");
+      });
+    });
+
+    it("应该验证子节点内容不能为空", () => {
+      render(
+        <NodeEditor
+          {...defaultProps}
+          mode="edit"
+          selectedNodeId="parent-node-123"
+          onCreateChildNode={mockOnCreateChildNode}
+        />,
+      );
+
+      const createButton = screen.getByRole("button", {
+        name: "Create Child Topic",
+      });
+
+      // 按钮初始状态应该是禁用的
+      expect(createButton).toBeDisabled();
+
+      // 点击禁用按钮不应该调用回调
+      fireEvent.click(createButton);
+      expect(mockOnCreateChildNode).not.toHaveBeenCalled();
+    });
+
+    it("应该验证子节点内容长度限制", () => {
+      render(
+        <NodeEditor
+          {...defaultProps}
+          mode="edit"
+          selectedNodeId="parent-node-123"
+          onCreateChildNode={mockOnCreateChildNode}
+        />,
+      );
+
+      const childTextarea = screen.getByPlaceholderText(
+        "Enter child topic content...",
+      );
+      const longContent = "a".repeat(501); // 超过500字符限制
+
+      fireEvent.change(childTextarea, { target: { value: longContent } });
+
+      // 检查字符计数显示
+      expect(screen.getByText("501/500")).toBeInTheDocument();
+
+      // 应该仍然可以输入，但会有长度限制
+      expect(childTextarea).toHaveValue(longContent);
+    });
+
+    it("应该显示字符计数", () => {
+      render(
+        <NodeEditor
+          {...defaultProps}
+          mode="edit"
+          selectedNodeId="parent-node-123"
+          onCreateChildNode={mockOnCreateChildNode}
+        />,
+      );
+
+      const childTextarea = screen.getByPlaceholderText(
+        "Enter child topic content...",
+      );
+
+      fireEvent.change(childTextarea, { target: { value: "测试内容" } });
+
+      expect(screen.getByText("4/500")).toBeInTheDocument();
+    });
+
+    it("创建子节点时应该显示加载状态", async () => {
+      const { rerender } = render(
+        <NodeEditor
+          {...defaultProps}
+          mode="edit"
+          selectedNodeId="parent-node-123"
+          onCreateChildNode={mockOnCreateChildNode}
+        />,
+      );
+
+      const childTextarea = screen.getByPlaceholderText(
+        "Enter child topic content...",
+      );
+      const createButton = screen.getByRole("button", {
+        name: "Create Child Topic",
+      });
+
+      // 输入内容启用按钮
+      fireEvent.change(childTextarea, { target: { value: "测试内容" } });
+
+      expect(createButton).not.toBeDisabled();
+      expect(mockOnCreateChildNode).not.toHaveBeenCalled();
+    });
+
+    it("应该处理创建子节点的错误", async () => {
+      mockOnCreateChildNode.mockRejectedValue(new Error("创建失败"));
+
+      render(
+        <NodeEditor
+          {...defaultProps}
+          mode="edit"
+          selectedNodeId="parent-node-123"
+          onCreateChildNode={mockOnCreateChildNode}
+        />,
+      );
+
+      const childTextarea = screen.getByPlaceholderText(
+        "Enter child topic content...",
+      );
+      const createButton = screen.getByRole("button", {
+        name: "Create Child Topic",
+      });
+
+      fireEvent.change(childTextarea, { target: { value: "测试内容" } });
+      fireEvent.click(createButton);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Failed to create child topic, please try again"),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("内容为空时应该禁用创建按钮", () => {
+      render(
+        <NodeEditor
+          {...defaultProps}
+          mode="edit"
+          selectedNodeId="parent-node-123"
+          onCreateChildNode={mockOnCreateChildNode}
+        />,
+      );
+
+      const createButton = screen.getByRole("button", {
+        name: "Create Child Topic",
+      });
+
+      expect(createButton).toBeDisabled();
+    });
+
+    it("有内容时应该启用创建按钮", () => {
+      render(
+        <NodeEditor
+          {...defaultProps}
+          mode="edit"
+          selectedNodeId="parent-node-123"
+          onCreateChildNode={mockOnCreateChildNode}
+        />,
+      );
+
+      const childTextarea = screen.getByPlaceholderText(
+        "Enter child topic content...",
+      );
+      const createButton = screen.getByRole("button", {
+        name: "Create Child Topic",
+      });
+
+      fireEvent.change(childTextarea, { target: { value: "测试内容" } });
+
+      expect(createButton).not.toBeDisabled();
+    });
+  });
 });
