@@ -46,6 +46,19 @@ class MockUserDataService {
     this.currentUserId = null;
   }
 
+  async getLatestUsers(limit: number = 5): Promise<User[]> {
+    try {
+      // 将 Map 转换为数组并按创建时间排序
+      const allUsers = Array.from(this.users.values());
+      return allUsers
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+        .slice(0, limit);
+    } catch (error) {
+      console.error("获取最新用户失败:", error);
+      return [];
+    }
+  }
+
   private generateUUID(): string {
     return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
   }
@@ -226,6 +239,98 @@ describe("UserDataService - 简化版本", () => {
 
       // Assert
       expect(user.id.length).toBeGreaterThan(10);
+    });
+  });
+
+  describe("最新用户查询", () => {
+    it("应该返回空数组当没有用户时", async () => {
+      // Act
+      const latestUsers = await userDataService.getLatestUsers();
+
+      // Assert
+      expect(latestUsers).toEqual([]);
+      expect(latestUsers).toHaveLength(0);
+    });
+
+    it("应该返回最新的单个用户", async () => {
+      // Arrange
+      await userDataService.createOrGetUser("user1");
+
+      // Act
+      const latestUsers = await userDataService.getLatestUsers();
+
+      // Assert
+      expect(latestUsers).toHaveLength(1);
+      expect(latestUsers[0].username).toBe("user1");
+    });
+
+    it("应该按创建时间降序返回多个用户", async () => {
+      // Arrange
+      const user1 = await userDataService.createOrGetUser("user1");
+      // 等待一小段时间确保创建时间不同
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      const user2 = await userDataService.createOrGetUser("user2");
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      const user3 = await userDataService.createOrGetUser("user3");
+
+      // Act
+      const latestUsers = await userDataService.getLatestUsers();
+
+      // Assert
+      expect(latestUsers).toHaveLength(3);
+      expect(latestUsers[0].username).toBe("user3"); // 最新
+      expect(latestUsers[1].username).toBe("user2"); // 中间
+      expect(latestUsers[2].username).toBe("user1"); // 最早
+    });
+
+    it("应该支持限制返回的用户数量", async () => {
+      // Arrange
+      await userDataService.createOrGetUser("user1");
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      await userDataService.createOrGetUser("user2");
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      await userDataService.createOrGetUser("user3");
+
+      // Act
+      const latestUsers = await userDataService.getLatestUsers(2);
+
+      // Assert
+      expect(latestUsers).toHaveLength(2);
+      expect(latestUsers[0].username).toBe("user3");
+      expect(latestUsers[1].username).toBe("user2");
+    });
+
+    it("应该忽略重复的用户名", async () => {
+      // Arrange
+      await userDataService.createOrGetUser("duplicate");
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      await userDataService.createOrGetUser("duplicate"); // 重复，不会创建新用户
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      await userDataService.createOrGetUser("user2");
+
+      // Act
+      const latestUsers = await userDataService.getLatestUsers();
+
+      // Assert
+      expect(latestUsers).toHaveLength(2);
+      expect(latestUsers[0].username).toBe("user2"); // 最新
+      expect(latestUsers[1].username).toBe("duplicate"); // 重复用户只有一个
+    });
+
+    it("应该处理默认限制参数", async () => {
+      // Arrange
+      for (let i = 1; i <= 10; i++) {
+        await userDataService.createOrGetUser(`user${i}`);
+        await new Promise((resolve) => setTimeout(resolve, 5));
+      }
+
+      // Act
+      const latestUsers = await userDataService.getLatestUsers(); // 使用默认限制
+
+      // Assert
+      expect(latestUsers).toHaveLength(5); // 默认限制为5
+      expect(latestUsers[0].username).toBe("user10"); // 最新
+      expect(latestUsers[4].username).toBe("user6");
     });
   });
 });

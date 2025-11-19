@@ -6,8 +6,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useUserStore } from "../stores/user-store";
+import { userDataService } from "../database/user-data-service";
 
 // 表单数据接口
 interface HomeFormData {
@@ -23,6 +24,7 @@ interface FormErrors {
 
 export function HomePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const {
     currentUser,
     isLoading: userLoading,
@@ -38,6 +40,34 @@ export function HomePage() {
 
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // 自动填充表单数据
+  useEffect(() => {
+    const initializeFormData = async () => {
+      const urlChannelId = searchParams?.get("channel");
+
+      // 初始化表单数据
+      const initialFormData: HomeFormData = {
+        username: "",
+        channelId: urlChannelId || "",
+      };
+
+      // 尝试获取最新用户名
+      try {
+        const latestUsers = await userDataService.getLatestUsers(1);
+        if (latestUsers.length > 0) {
+          initialFormData.username = latestUsers[0].username;
+        }
+      } catch (error) {
+        console.error("获取最新用户失败:", error);
+        // 优雅降级，不影响表单初始化
+      }
+
+      setFormData(initialFormData);
+    };
+
+    initializeFormData();
+  }, [searchParams]);
 
   // 检查是否已有用户登录，如果有则跳转到画板
   useEffect(() => {
@@ -103,7 +133,7 @@ export function HomePage() {
       await createOrGetUser(formData.username.trim());
 
       // 直接跳转到画板页面，使用URL中的频道ID
-      router.push(`/board/${formData.channelId.trim()}`);
+      router.push(`/${formData.channelId.trim()}`);
     } catch (error) {
       console.error("登录失败:", error);
       // 错误已经在状态管理中处理
@@ -148,9 +178,8 @@ export function HomePage() {
               value={formData.username}
               onChange={handleInputChange("username")}
               disabled={isLoading}
-              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                formErrors.username ? "border-red-300" : "border-gray-300"
-              }`}
+              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.username ? "border-red-300" : "border-gray-300"
+                }`}
               placeholder="请输入用户名"
               maxLength={100}
             />
@@ -173,9 +202,8 @@ export function HomePage() {
               value={formData.channelId}
               onChange={handleInputChange("channelId")}
               disabled={isLoading}
-              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                formErrors.channelId ? "border-red-300" : "border-gray-300"
-              }`}
+              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.channelId ? "border-red-300" : "border-gray-300"
+                }`}
               placeholder="请输入频道ID（字母和数字）"
               maxLength={50}
             />

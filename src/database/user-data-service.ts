@@ -24,6 +24,7 @@ export class CollaboPadDB extends Dexie {
 export interface UserDataService {
   createOrGetUser(username: string): Promise<User>;
   getCurrentUser(): Promise<User | null>;
+  getLatestUsers(limit?: number): Promise<User[]>;
   clearUserData(): Promise<void>;
 }
 
@@ -70,6 +71,20 @@ export class UserDataServiceImpl implements UserDataService {
     }
 
     return await this.db.users.get(session.currentUserId);
+  }
+
+  async getLatestUsers(limit: number = 5): Promise<User[]> {
+    try {
+      // 按创建时间降序排列，获取最新的用户
+      return await this.db.users
+        .orderBy("createdAt")
+        .reverse()
+        .limit(limit)
+        .toArray();
+    } catch (error) {
+      console.error("获取最新用户失败:", error);
+      return [];
+    }
   }
 
   async clearUserData(): Promise<void> {
