@@ -4,20 +4,18 @@
  */
 
 import Dexie, { Table } from "dexie";
-import { User, UserSession, Channel } from "./types";
+import { User, UserSession } from "./types";
 
 // 简化的数据库类定义
 export class CollaboPadDB extends Dexie {
   users!: Table<User>;
   userSessions!: Table<UserSession>;
-  channels!: Table<Channel>;
 
   constructor() {
     super("collaboPadDB");
     this.version(1).stores({
       users: "id, username, createdAt",
       userSessions: "currentUserId, lastActiveAt",
-      channels: "id, name, userId, createdAt, updatedAt",
     });
   }
 }

@@ -9,8 +9,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Board from "@/components/Board";
 import { useUserStore } from "@/stores/user-store";
-import { useChannelStore } from "@/stores/channel-store";
-import { databaseService } from "@/database/database-service";
+import { userDataService } from "@/database/user-data-service";
 
 export default function BoardPage() {
   const params = useParams();
@@ -18,7 +17,6 @@ export default function BoardPage() {
   const channelId = params["channel-id"] as string;
 
   const { currentUser, loadCurrentUser } = useUserStore();
-  const { setCurrentChannel, loadUserChannels } = useChannelStore();
 
   const [isValidating, setIsValidating] = useState(true);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -42,39 +40,16 @@ export default function BoardPage() {
         }
 
         // 如果没有用户，重定向到首页
-        const session = await databaseService.getUserSession();
-        if (!session.currentUserId) {
+        const currentUserData = await userDataService.getCurrentUser();
+        if (!currentUserData) {
           router.push("/");
           return;
         }
 
-        // 加载用户频道
-        await loadUserChannels(session.currentUserId);
-
-        // 检查频道是否存在且属于当前用户
-        const channel = await databaseService.getChannel(channelId);
-        if (!channel) {
-          setValidationError("频道不存在");
-          router.push("/");
-          return;
-        }
-
-        if (channel.userId !== session.currentUserId) {
-          setValidationError("您没有访问此频道的权限");
-          router.push("/");
-          return;
-        }
-
-        // 设置当前频道
-        setCurrentChannel(channel);
-
-        // 更新会话中的当前频道
-        await databaseService.updateUserSession({
-          currentChannelId: channelId,
-        });
+        // 简化的验证完成，直接显示画板
       } catch (error) {
-        console.error("频道验证失败:", error);
-        setValidationError("频道验证失败");
+        console.error("验证失败:", error);
+        setValidationError("验证失败");
         setTimeout(() => {
           router.push("/");
         }, 2000);
@@ -84,14 +59,7 @@ export default function BoardPage() {
     };
 
     validateAndInitialize();
-  }, [
-    channelId,
-    currentUser,
-    router,
-    loadCurrentUser,
-    setCurrentChannel,
-    loadUserChannels,
-  ]);
+  }, [channelId, currentUser, router, loadCurrentUser]);
 
   // 显示验证状态
   if (isValidating) {

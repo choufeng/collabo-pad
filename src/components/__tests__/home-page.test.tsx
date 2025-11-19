@@ -7,12 +7,10 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HomePage } from "../home-page";
 import { useUserStore } from "../../stores/user-store";
-import { useChannelStore } from "../../stores/channel-store";
 import { useRouter } from "next/navigation";
 
 // Mock 状态管理
 jest.mock("../../stores/user-store");
-jest.mock("../../stores/channel-store");
 
 // Mock 路由
 jest.mock("next/navigation", () => ({
@@ -21,9 +19,6 @@ jest.mock("next/navigation", () => ({
 
 const mockUseUserStore = useUserStore as jest.MockedFunction<
   typeof useUserStore
->;
-const mockUseChannelStore = useChannelStore as jest.MockedFunction<
-  typeof useChannelStore
 >;
 const mockPush = jest.fn();
 
@@ -49,18 +44,6 @@ describe("HomePage 组件 - 简化版本", () => {
       createOrGetUser: jest.fn(),
       loadCurrentUser: jest.fn(),
       clearCurrentUser: jest.fn(),
-      reset: jest.fn(),
-    });
-
-    // 设置默认的频道 store mock 返回值
-    mockUseChannelStore.mockReturnValue({
-      currentChannel: null,
-      isLoading: false,
-      error: null,
-      setCurrentChannel: jest.fn(),
-      setLoading: jest.fn(),
-      setError: jest.fn(),
-      createChannel: jest.fn(),
       reset: jest.fn(),
     });
   });
@@ -130,22 +113,13 @@ describe("HomePage 组件 - 简化版本", () => {
       expect(screen.getByText("频道ID不能为空")).toBeInTheDocument();
     });
 
-    it("应该验证用户名长度", async () => {
+    it("应该限制用户名最大长度为100", () => {
       // Arrange
       render(<HomePage />);
       const usernameInput = screen.getByLabelText("用户名");
-      const submitButton = screen.getByRole("button", { name: "进入画板" });
-      const longUsername = "a".repeat(101);
-
-      // Act
-      await user.type(usernameInput, longUsername);
-      await user.type(screen.getByLabelText("频道ID"), "testchannel");
-      await user.click(submitButton);
 
       // Assert
-      expect(
-        screen.getByText("用户名长度不能超过100个字符"),
-      ).toBeInTheDocument();
+      expect(usernameInput).toHaveAttribute("maxLength", "100");
     });
 
     it("应该验证频道ID格式", async () => {
@@ -172,13 +146,6 @@ describe("HomePage 组件 - 简化版本", () => {
         username: "testuser",
         createdAt: new Date(),
       });
-      const mockCreateChannel = jest.fn().mockResolvedValue({
-        id: "testchannel",
-        name: "测试频道",
-        userId: "user-123",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
 
       mockUseUserStore.mockReturnValue({
         currentUser: null,
@@ -190,17 +157,6 @@ describe("HomePage 组件 - 简化版本", () => {
         createOrGetUser: mockCreateOrGetUser,
         loadCurrentUser: jest.fn(),
         clearCurrentUser: jest.fn(),
-        reset: jest.fn(),
-      });
-
-      mockUseChannelStore.mockReturnValue({
-        currentChannel: null,
-        isLoading: false,
-        error: null,
-        setCurrentChannel: jest.fn(),
-        setLoading: jest.fn(),
-        setError: jest.fn(),
-        createChannel: mockCreateChannel,
         reset: jest.fn(),
       });
 
@@ -218,9 +174,6 @@ describe("HomePage 组件 - 简化版本", () => {
       // Assert
       await waitFor(() => {
         expect(mockCreateOrGetUser).toHaveBeenCalledWith("testuser");
-        expect(mockCreateChannel).toHaveBeenCalledWith({
-          id: "testchannel",
-        });
         expect(mockPush).toHaveBeenCalledWith("/board/testchannel");
       });
     });
@@ -260,62 +213,6 @@ describe("HomePage 组件 - 简化版本", () => {
         expect(screen.getByText("用户创建失败")).toBeInTheDocument();
       });
     });
-
-    it("应该处理频道创建失败", async () => {
-      // Arrange
-      const mockCreateOrGetUser = jest.fn().mockResolvedValue({
-        id: "user-123",
-        username: "testuser",
-        createdAt: new Date(),
-      });
-      const mockCreateChannel = jest
-        .fn()
-        .mockRejectedValue(new Error("频道创建失败"));
-
-      mockUseUserStore.mockReturnValue({
-        currentUser: {
-          id: "user-123",
-          username: "testuser",
-          createdAt: new Date(),
-        },
-        isLoading: false,
-        error: null,
-        setCurrentUser: jest.fn(),
-        setLoading: jest.fn(),
-        setError: jest.fn(),
-        createOrGetUser: mockCreateOrGetUser,
-        loadCurrentUser: jest.fn(),
-        clearCurrentUser: jest.fn(),
-        reset: jest.fn(),
-      });
-
-      mockUseChannelStore.mockReturnValue({
-        currentChannel: null,
-        isLoading: false,
-        error: "频道创建失败",
-        setCurrentChannel: jest.fn(),
-        setLoading: jest.fn(),
-        setError: jest.fn(),
-        createChannel: mockCreateChannel,
-        reset: jest.fn(),
-      });
-
-      render(<HomePage />);
-
-      const usernameInput = screen.getByLabelText("用户名");
-      const channelIdInput = screen.getByLabelText("频道ID");
-      const submitButton = screen.getByRole("button", { name: "进入画板" });
-
-      // Act
-      await user.type(usernameInput, "testuser");
-      await user.type(channelIdInput, "testchannel");
-      await user.click(submitButton);
-
-      // Assert
-      await waitFor(() => {
-        expect(screen.getByText("频道创建失败")).toBeInTheDocument();
-      });
-    });
   });
 
   describe("加载状态", () => {
@@ -338,33 +235,7 @@ describe("HomePage 组件 - 简化版本", () => {
 
       const usernameInput = screen.getByLabelText("用户名");
       const channelIdInput = screen.getByLabelText("频道ID");
-      const submitButton = screen.getByRole("button", { name: "进入画板" });
-
-      // Assert
-      expect(usernameInput).toBeDisabled();
-      expect(channelIdInput).toBeDisabled();
-      expect(submitButton).toBeDisabled();
-      expect(submitButton).toHaveTextContent("正在处理...");
-    });
-
-    it("应该在频道加载时禁用表单", () => {
-      // Arrange
-      mockUseChannelStore.mockReturnValue({
-        currentChannel: null,
-        isLoading: true,
-        error: null,
-        setCurrentChannel: jest.fn(),
-        setLoading: jest.fn(),
-        setError: jest.fn(),
-        createChannel: jest.fn(),
-        reset: jest.fn(),
-      });
-
-      render(<HomePage />);
-
-      const usernameInput = screen.getByLabelText("用户名");
-      const channelIdInput = screen.getByLabelText("频道ID");
-      const submitButton = screen.getByRole("button", { name: "进入画板" });
+      const submitButton = screen.getByRole("button", { name: "正在处理..." });
 
       // Assert
       expect(usernameInput).toBeDisabled();
@@ -394,25 +265,6 @@ describe("HomePage 组件 - 简化版本", () => {
 
       // Assert
       expect(screen.getByText("用户错误")).toBeInTheDocument();
-    });
-
-    it("应该显示频道错误", () => {
-      // Arrange
-      mockUseChannelStore.mockReturnValue({
-        currentChannel: null,
-        isLoading: false,
-        error: "频道错误",
-        setCurrentChannel: jest.fn(),
-        setLoading: jest.fn(),
-        setError: jest.fn(),
-        createChannel: jest.fn(),
-        reset: jest.fn(),
-      });
-
-      render(<HomePage />);
-
-      // Assert
-      expect(screen.getByText("频道错误")).toBeInTheDocument();
     });
   });
 

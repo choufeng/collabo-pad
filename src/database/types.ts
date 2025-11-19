@@ -9,14 +9,6 @@ export interface User {
   createdAt: Date; // 创建时间
 }
 
-export interface Channel {
-  id: string;
-  name?: string;
-  userId: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
 export interface UserSession {
   currentUserId: string | null;
   lastActiveAt: Date;

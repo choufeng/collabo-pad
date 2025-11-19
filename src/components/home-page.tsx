@@ -8,7 +8,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUserStore } from "../stores/user-store";
-import { useChannelStore } from "../stores/channel-store";
 
 // 表单数据接口
 interface HomeFormData {
@@ -30,12 +29,6 @@ export function HomePage() {
     error: userError,
     createOrGetUser,
   } = useUserStore();
-
-  const {
-    isLoading: channelLoading,
-    error: channelError,
-    createChannel,
-  } = useChannelStore();
 
   // 表单状态
   const [formData, setFormData] = useState<HomeFormData>({
@@ -109,13 +102,8 @@ export function HomePage() {
       // 创建或获取用户（新的简化API）
       await createOrGetUser(formData.username.trim());
 
-      // 创建频道
-      const channel = await createChannel({
-        id: formData.channelId.trim(),
-      });
-
-      // 跳转到画板页面
-      router.push(`/board/${channel.id}`);
+      // 直接跳转到画板页面，使用URL中的频道ID
+      router.push(`/board/${formData.channelId.trim()}`);
     } catch (error) {
       console.error("登录失败:", error);
       // 错误已经在状态管理中处理
@@ -125,8 +113,8 @@ export function HomePage() {
   };
 
   // 计算加载状态
-  const isLoading = userLoading || channelLoading || isSubmitting;
-  const hasError = userError || channelError;
+  const isLoading = userLoading || isSubmitting;
+  const hasError = userError;
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -140,7 +128,7 @@ export function HomePage() {
         {/* 错误提示 */}
         {hasError && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-sm text-red-600">{userError || channelError}</p>
+            <p className="text-sm text-red-600">{userError}</p>
           </div>
         )}
 

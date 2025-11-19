@@ -15,11 +15,7 @@ export interface UserValidation {
   customMessage?: string;
 }
 
-// 频道相关类型
-export interface ChannelInput {
-  channelId: string;
-}
-
+// 频道相关类型 - 简化后只保留必要的表单验证
 export interface ChannelValidation {
   required: boolean;
   minLength: number;
@@ -82,7 +78,7 @@ export const VALIDATION_RULES: ValidationRules = {
   },
 };
 
-// 错误消息类型
+// 错误消息类型 - 简化后移除频道相关错误
 export const ERROR_MESSAGES = {
   EMPTY_USERNAME: "用户名不能为空",
   USERNAME_TOO_LONG: "用户名长度不能超过100个字符",
@@ -90,11 +86,7 @@ export const ERROR_MESSAGES = {
   CHANNEL_ID_TOO_LONG: "频道ID长度不能超过50个字符",
   INVALID_CHANNEL_ID: "频道ID只能包含字母和数字",
   USER_CREATION_FAILED: "用户创建失败",
-  CHANNEL_CREATION_FAILED: "频道创建失败",
-  CHANNEL_NOT_FOUND: "频道不存在",
-  ACCESS_DENIED: "您没有访问此频道的权限",
   INVALID_CHANNEL_FORMAT: "无效的频道ID格式",
-  CHANNEL_VALIDATION_FAILED: "频道验证失败",
   LOGIN_FAILED: "登录失败",
 } as const;
 
