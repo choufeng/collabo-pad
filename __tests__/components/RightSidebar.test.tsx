@@ -102,7 +102,7 @@ describe("RightSidebar组件", () => {
     it("应该渲染正确的模式标题", () => {
       render(<RightSidebar {...defaultProps} isOpen={true} mode="create" />);
 
-      expect(screen.getByText("创建新节点")).toBeInTheDocument();
+      expect(screen.getByText("Create New Topic")).toBeInTheDocument();
     });
 
     it("应该渲染 NodeEditor 组件", () => {
@@ -116,13 +116,13 @@ describe("RightSidebar组件", () => {
     it("创建模式应该显示正确的标题", () => {
       render(<RightSidebar {...defaultProps} isOpen={true} mode="create" />);
 
-      expect(screen.getByText("创建新节点")).toBeInTheDocument();
+      expect(screen.getByText("Create New Topic")).toBeInTheDocument();
     });
 
     it("编辑模式应该显示正确的标题", () => {
       render(<RightSidebar {...defaultProps} isOpen={true} mode="edit" />);
 
-      expect(screen.getByText("编辑节点")).toBeInTheDocument();
+      expect(screen.getByText("Edit Topic")).toBeInTheDocument();
     });
 
     it("连接模式应该显示正确的标题", () => {
@@ -130,7 +130,7 @@ describe("RightSidebar组件", () => {
         <RightSidebar {...defaultProps} isOpen={true} mode="connection" />,
       );
 
-      expect(screen.getByText("创建连接节点")).toBeInTheDocument();
+      expect(screen.getByText("Create Connected Topic")).toBeInTheDocument();
     });
   });
 
@@ -138,7 +138,7 @@ describe("RightSidebar组件", () => {
     it("应该渲染关闭按钮", () => {
       render(<RightSidebar {...defaultProps} isOpen={true} mode="create" />);
 
-      const closeButton = screen.getByLabelText("关闭边栏");
+      const closeButton = screen.getByLabelText("Close sidebar");
       expect(closeButton).toBeInTheDocument();
     });
 
@@ -153,7 +153,7 @@ describe("RightSidebar组件", () => {
         />,
       );
 
-      const closeButton = screen.getByLabelText("关闭边栏");
+      const closeButton = screen.getByLabelText("Close sidebar");
       fireEvent.click(closeButton);
 
       expect(onClose).toHaveBeenCalledTimes(1);

@@ -52,7 +52,7 @@ export function HomePage() {
         channelId: urlChannelId || "",
       };
 
-      // 尝试获取最新用户名
+      // 尝试获取最新Username
       try {
         const latestUsers = await userDataService.getLatestUsers(1);
         if (latestUsers.length > 0) {
@@ -72,7 +72,7 @@ export function HomePage() {
   // 检查是否已有用户登录，如果有则跳转到画板
   useEffect(() => {
     if (currentUser) {
-      // TODO: 从会话中获取当前频道ID并跳转
+      // TODO: 从会话中获取当前Channel ID并跳转
       // router.push('/board/default');
     }
   }, [currentUser, router]);
@@ -81,20 +81,20 @@ export function HomePage() {
   const validateForm = (): boolean => {
     const errors: FormErrors = {};
 
-    // 验证用户名
+    // 验证Username
     if (!formData.username.trim()) {
-      errors.username = "用户名不能为空";
+      errors.username = "Username cannot be empty";
     } else if (formData.username.length > 100) {
-      errors.username = "用户名长度不能超过100个字符";
+      errors.username = "Username cannot exceed 100 characters";
     }
 
-    // 验证频道ID
+    // 验证Channel ID
     if (!formData.channelId.trim()) {
-      errors.channelId = "频道ID不能为空";
+      errors.channelId = "Channel ID cannot be empty";
     } else if (formData.channelId.length > 50) {
-      errors.channelId = "频道ID长度不能超过50个字符";
+      errors.channelId = "Channel ID cannot exceed 50 characters";
     } else if (!/^[a-zA-Z0-9]+$/.test(formData.channelId)) {
-      errors.channelId = "频道ID只能包含字母和数字";
+      errors.channelId = "Channel ID can only contain letters and numbers";
     }
 
     setFormErrors(errors);
@@ -132,7 +132,7 @@ export function HomePage() {
       // 创建或获取用户（新的简化API）
       await createOrGetUser(formData.username.trim());
 
-      // 直接跳转到画板页面，使用URL中的频道ID
+      // 直接跳转到画板页面，使用URL中的Channel ID
       router.push(`/${formData.channelId.trim()}`);
     } catch (error) {
       console.error("登录失败:", error);
@@ -151,8 +151,12 @@ export function HomePage() {
       <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
         {/* 页面标题 */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">协作画板</h1>
-          <p className="text-gray-600">输入用户名和频道ID开始协作</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Collaborative Whiteboard
+          </h1>
+          <p className="text-gray-600">
+            Enter username and channel ID to start collaboration
+          </p>
         </div>
 
         {/* 错误提示 */}
@@ -164,13 +168,13 @@ export function HomePage() {
 
         {/* 登录表单 */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* 用户名输入 */}
+          {/* Username输入 */}
           <div>
             <label
               htmlFor="username"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              用户名
+              Username
             </label>
             <input
               type="text"
@@ -178,9 +182,10 @@ export function HomePage() {
               value={formData.username}
               onChange={handleInputChange("username")}
               disabled={isLoading}
-              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.username ? "border-red-300" : "border-gray-300"
-                }`}
-              placeholder="请输入用户名"
+              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                formErrors.username ? "border-red-300" : "border-gray-300"
+              }`}
+              placeholder="Enter username"
               maxLength={100}
             />
             {formErrors.username && (
@@ -188,13 +193,13 @@ export function HomePage() {
             )}
           </div>
 
-          {/* 频道ID输入 */}
+          {/* Channel ID输入 */}
           <div>
             <label
               htmlFor="channelId"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              频道ID
+              Channel ID
             </label>
             <input
               type="text"
@@ -202,9 +207,10 @@ export function HomePage() {
               value={formData.channelId}
               onChange={handleInputChange("channelId")}
               disabled={isLoading}
-              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formErrors.channelId ? "border-red-300" : "border-gray-300"
-                }`}
-              placeholder="请输入频道ID（字母和数字）"
+              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                formErrors.channelId ? "border-red-300" : "border-gray-300"
+              }`}
+              placeholder="Enter channel ID (letters and numbers)"
               maxLength={50}
             />
             {formErrors.channelId && (
@@ -220,18 +226,18 @@ export function HomePage() {
             disabled={isLoading}
             className="w-full py-2 px-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {isLoading ? "正在处理..." : "进入画板"}
+            {isLoading ? "Processing..." : "Enter Whiteboard"}
           </button>
         </form>
 
         {/* 帮助信息 */}
         <div className="mt-6 p-4 bg-gray-50 rounded-md">
-          <h3 className="text-sm font-medium text-gray-700 mb-2">使用说明：</h3>
+          <h3 className="text-sm font-medium text-gray-700 mb-2">Usage:</h3>
           <ul className="text-sm text-gray-600 space-y-1">
-            <li>• 用户名：任意非空字符，长度不超过100</li>
-            <li>• 频道ID：只能包含字母和数字，区分大小写</li>
-            <li>• 相同用户名会复用已存在的用户</li>
-            <li>• 相同频道ID会进入已存在的频道</li>
+            <li>• Username: Any non-empty characters, max 100 length</li>
+            <li>• Channel ID: Letters and numbers only, case sensitive</li>
+            <li>• Same username will reuse existing user</li>
+            <li>• Same channel ID will enter existing channel</li>
           </ul>
         </div>
       </div>

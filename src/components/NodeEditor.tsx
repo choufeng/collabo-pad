@@ -63,11 +63,11 @@ const NodeEditor: React.FC<NodeEditorProps> = ({
     const newErrors: Record<string, string> = {};
 
     if (!formData.content.trim()) {
-      newErrors.content = "节点内容不能为空";
+      newErrors.content = "Topic content cannot be empty";
     }
 
     if (formData.content.length > 500) {
-      newErrors.content = "节点内容不能超过500个字符";
+      newErrors.content = "Topic content cannot exceed 500 characters";
     }
 
     setErrors(newErrors);
@@ -93,7 +93,7 @@ const NodeEditor: React.FC<NodeEditorProps> = ({
       }
     } catch (error) {
       console.error("保存节点失败:", error);
-      setErrors({ submit: "保存失败，请重试" });
+      setErrors({ submit: "Save failed, please try again" });
     } finally {
       setIsSubmitting(false);
     }
@@ -102,13 +102,13 @@ const NodeEditor: React.FC<NodeEditorProps> = ({
   const getSubmitButtonText = () => {
     switch (mode) {
       case "create":
-        return "创建节点";
+        return "Create Topic";
       case "edit":
-        return "保存修改";
+        return "Save Changes";
       case "connection":
-        return "创建并连接";
+        return "Create and Connect";
       default:
-        return "保存";
+        return "Save";
     }
   };
 
@@ -133,7 +133,7 @@ const NodeEditor: React.FC<NodeEditorProps> = ({
               d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
             />
           </svg>
-          节点内容 <span className="text-red-500 ml-1">*</span>
+          Topic Content <span className="text-red-500 ml-1">*</span>
         </label>
         <div className="relative">
           <textarea
@@ -145,7 +145,7 @@ const NodeEditor: React.FC<NodeEditorProps> = ({
                 ? "border-red-500 bg-red-50"
                 : "border-gray-300 hover:border-gray-400"
             }`}
-            placeholder="请输入节点内容"
+            placeholder="Enter topic content"
             rows={6}
             maxLength={500}
             disabled={isSubmitting}
@@ -190,7 +190,7 @@ const NodeEditor: React.FC<NodeEditorProps> = ({
               />
             </svg>
             <p className="text-sm text-green-800 font-medium">
-              将创建一个新节点并连接到源节点
+              Will create a new topic and connect to source topic
             </p>
           </div>
         </div>
@@ -245,7 +245,7 @@ const NodeEditor: React.FC<NodeEditorProps> = ({
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 ></path>
               </svg>
-              保存中...
+              Saving...
             </div>
           ) : (
             getSubmitButtonText()

@@ -20,8 +20,10 @@ describe("NodeEditor组件", () => {
     it("应该正确渲染 NodeEditor 组件", () => {
       render(<NodeEditor {...defaultProps} />);
 
-      expect(screen.getByText("节点内容")).toBeInTheDocument();
-      expect(screen.getByPlaceholderText("请输入节点内容")).toBeInTheDocument();
+      expect(screen.getByText("Topic Content")).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText("Enter topic content"),
+      ).toBeInTheDocument();
     });
 
     it("应该渲染提交按钮", () => {
@@ -36,7 +38,7 @@ describe("NodeEditor组件", () => {
       render(<NodeEditor {...defaultProps} mode="create" />);
 
       expect(
-        screen.getByRole("button", { name: "创建节点" }),
+        screen.getByRole("button", { name: "Create Topic" }),
       ).toBeInTheDocument();
     });
 
@@ -44,7 +46,7 @@ describe("NodeEditor组件", () => {
       render(<NodeEditor {...defaultProps} mode="edit" />);
 
       expect(
-        screen.getByRole("button", { name: "保存修改" }),
+        screen.getByRole("button", { name: "Save Changes" }),
       ).toBeInTheDocument();
     });
 
@@ -52,7 +54,7 @@ describe("NodeEditor组件", () => {
       render(<NodeEditor {...defaultProps} mode="connection" />);
 
       expect(
-        screen.getByRole("button", { name: "创建并连接" }),
+        screen.getByRole("button", { name: "Create and Connect" }),
       ).toBeInTheDocument();
     });
   });
@@ -63,7 +65,7 @@ describe("NodeEditor组件", () => {
       render(<NodeEditor {...defaultProps} initialData={initialData} />);
 
       // 使用更灵活的方法检查 textarea 的值
-      const textarea = screen.getByPlaceholderText("请输入节点内容");
+      const textarea = screen.getByPlaceholderText("Enter topic content");
       expect(textarea).toBeInTheDocument();
       // 注意：由于 ReactFlow 集成问题，这个测试可能需要调整
     });
@@ -85,7 +87,7 @@ describe("NodeEditor组件", () => {
     it("应该允许用户输入内容", () => {
       render(<NodeEditor {...defaultProps} />);
 
-      const textarea = screen.getByPlaceholderText("请输入节点内容");
+      const textarea = screen.getByPlaceholderText("Enter topic content");
       fireEvent.change(textarea, { target: { value: "用户输入的内容" } });
 
       expect(screen.getByText("7/500")).toBeInTheDocument();
@@ -94,7 +96,7 @@ describe("NodeEditor组件", () => {
     it("应该限制最大输入长度", () => {
       render(<NodeEditor {...defaultProps} />);
 
-      const textarea = screen.getByPlaceholderText("请输入节点内容");
+      const textarea = screen.getByPlaceholderText("Enter topic content");
       const longContent = "a".repeat(600);
       fireEvent.change(textarea, { target: { value: longContent } });
 
@@ -105,7 +107,7 @@ describe("NodeEditor组件", () => {
     it("应该实时更新字符计数", () => {
       render(<NodeEditor {...defaultProps} />);
 
-      const textarea = screen.getByPlaceholderText("请输入节点内容");
+      const textarea = screen.getByPlaceholderText("Enter topic content");
 
       fireEvent.change(textarea, { target: { value: "hello" } });
       expect(screen.getByText("5/500")).toBeInTheDocument();
@@ -119,14 +121,14 @@ describe("NodeEditor组件", () => {
     it("内容为空时应该能找到提交按钮", () => {
       render(<NodeEditor {...defaultProps} />);
 
-      const submitButton = screen.getByRole("button", { name: "创建节点" });
+      const submitButton = screen.getByRole("button", { name: "Create Topic" });
       expect(submitButton).toBeInTheDocument();
     });
 
     it("内容不为空时提交按钮应该可用", () => {
       render(<NodeEditor {...defaultProps} />);
 
-      const textarea = screen.getByPlaceholderText("请输入节点内容");
+      const textarea = screen.getByPlaceholderText("Enter topic content");
       const submitButton = screen.getByRole("button", { type: "submit" });
 
       fireEvent.change(textarea, { target: { value: "有效内容" } });
@@ -136,7 +138,7 @@ describe("NodeEditor组件", () => {
     it("应该允许输入空格内容", () => {
       render(<NodeEditor {...defaultProps} />);
 
-      const textarea = screen.getByPlaceholderText("请输入节点内容");
+      const textarea = screen.getByPlaceholderText("Enter topic content");
       fireEvent.change(textarea, { target: { value: "   " } });
 
       expect(textarea).toHaveValue("   ");
@@ -145,7 +147,7 @@ describe("NodeEditor组件", () => {
     it("应该能清空输入内容", () => {
       render(<NodeEditor {...defaultProps} />);
 
-      const textarea = screen.getByPlaceholderText("请输入节点内容");
+      const textarea = screen.getByPlaceholderText("Enter topic content");
 
       // 输入一些内容然后清空
       fireEvent.change(textarea, { target: { value: "test" } });
@@ -157,7 +159,7 @@ describe("NodeEditor组件", () => {
     it("内容超过500字符应该显示计数", () => {
       render(<NodeEditor {...defaultProps} />);
 
-      const textarea = screen.getByPlaceholderText("请输入节点内容");
+      const textarea = screen.getByPlaceholderText("Enter topic content");
 
       // 由于 maxLength，内容应该被截断到500字符
       const longContent = "a".repeat(501);
@@ -172,14 +174,14 @@ describe("NodeEditor组件", () => {
       const onSave = jest.fn();
       render(<NodeEditor {...defaultProps} onSave={onSave} />);
 
-      const textarea = screen.getByPlaceholderText("请输入节点内容");
-      const submitButton = screen.getByRole("button", { name: "创建节点" });
+      const textarea = screen.getByPlaceholderText("Enter topic content");
+      const submitButton = screen.getByRole("button", { name: "Create Topic" });
 
-      fireEvent.change(textarea, { target: { value: "新节点内容" } });
+      fireEvent.change(textarea, { target: { value: "新Topic Content" } });
       fireEvent.click(submitButton);
 
       expect(onSave).toHaveBeenCalledTimes(1);
-      expect(onSave).toHaveBeenCalledWith({ content: "新节点内容" });
+      expect(onSave).toHaveBeenCalledWith({ content: "新Topic Content" });
     });
 
     it("编辑模式下提交应该调用 onSave 并传递 nodeId 和数据", () => {
@@ -193,8 +195,8 @@ describe("NodeEditor组件", () => {
         />,
       );
 
-      const textarea = screen.getByPlaceholderText("请输入节点内容");
-      const submitButton = screen.getByRole("button", { name: "保存修改" });
+      const textarea = screen.getByPlaceholderText("Enter topic content");
+      const submitButton = screen.getByRole("button", { name: "Save Changes" });
 
       fireEvent.change(textarea, { target: { value: "更新的内容" } });
       fireEvent.click(submitButton);
@@ -216,21 +218,23 @@ describe("NodeEditor组件", () => {
         />,
       );
 
-      const textarea = screen.getByPlaceholderText("请输入节点内容");
-      const submitButton = screen.getByRole("button", { name: "创建并连接" });
+      const textarea = screen.getByPlaceholderText("Enter topic content");
+      const submitButton = screen.getByRole("button", {
+        name: "Create and Connect",
+      });
 
-      fireEvent.change(textarea, { target: { value: "连接节点内容" } });
+      fireEvent.change(textarea, { target: { value: "连接Topic Content" } });
       fireEvent.click(submitButton);
 
       expect(onSave).toHaveBeenCalledTimes(1);
-      expect(onSave).toHaveBeenCalledWith({ content: "连接节点内容" });
+      expect(onSave).toHaveBeenCalledWith({ content: "连接Topic Content" });
     });
 
     it("应该支持表单提交", () => {
       const onSave = jest.fn();
       render(<NodeEditor {...defaultProps} onSave={onSave} />);
 
-      const textarea = screen.getByPlaceholderText("请输入节点内容");
+      const textarea = screen.getByPlaceholderText("Enter topic content");
       fireEvent.change(textarea, { target: { value: "测试内容" } });
 
       const form = screen
@@ -246,7 +250,9 @@ describe("NodeEditor组件", () => {
     it("应该正确处理不同的 selectedNodeId", () => {
       render(<NodeEditor {...defaultProps} selectedNodeId="test-node-1" />);
 
-      expect(screen.getByPlaceholderText("请输入节点内容")).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText("Enter topic content"),
+      ).toBeInTheDocument();
     });
 
     it("应该正确处理不同的 sourceNodeId", () => {
@@ -258,7 +264,9 @@ describe("NodeEditor组件", () => {
         />,
       );
 
-      expect(screen.getByPlaceholderText("请输入节点内容")).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText("Enter topic content"),
+      ).toBeInTheDocument();
     });
   });
 
@@ -266,9 +274,11 @@ describe("NodeEditor组件", () => {
     it("应该处理无效的初始数据", () => {
       render(<NodeEditor {...defaultProps} initialData={null as any} />);
 
-      expect(screen.getByPlaceholderText("请输入节点内容")).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: "创建节点" }),
+        screen.getByPlaceholderText("Enter topic content"),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Create Topic" }),
       ).toBeInTheDocument();
     });
 
@@ -277,15 +287,15 @@ describe("NodeEditor组件", () => {
         .spyOn(console, "error")
         .mockImplementation(() => {});
       const onSave = jest.fn().mockImplementation(() => {
-        throw new Error("保存失败");
+        throw new Error("Save failed, please try again");
       });
 
       render(<NodeEditor {...defaultProps} onSave={onSave} />);
 
-      const textarea = screen.getByPlaceholderText("请输入节点内容");
+      const textarea = screen.getByPlaceholderText("Enter topic content");
       fireEvent.change(textarea, { target: { value: "测试内容" } });
 
-      const submitButton = screen.getByRole("button", { name: "创建节点" });
+      const submitButton = screen.getByRole("button", { name: "Create Topic" });
 
       expect(() => {
         fireEvent.click(submitButton);
@@ -305,7 +315,7 @@ describe("NodeEditor组件", () => {
         <NodeEditor {...defaultProps} mode="create" />,
       );
       expect(
-        screen.getByRole("button", { name: "创建节点" }),
+        screen.getByRole("button", { name: "Create Topic" }),
       ).toBeInTheDocument();
       unmount();
 
@@ -313,7 +323,7 @@ describe("NodeEditor组件", () => {
         <NodeEditor {...defaultProps} mode="edit" />,
       );
       expect(
-        screen.getByRole("button", { name: "保存修改" }),
+        screen.getByRole("button", { name: "Save Changes" }),
       ).toBeInTheDocument();
       unmount2();
 
@@ -321,7 +331,7 @@ describe("NodeEditor组件", () => {
         <NodeEditor {...defaultProps} mode="connection" />,
       );
       expect(
-        screen.getByRole("button", { name: "创建并连接" }),
+        screen.getByRole("button", { name: "Create and Connect" }),
       ).toBeInTheDocument();
       unmount3();
     });
@@ -330,7 +340,9 @@ describe("NodeEditor组件", () => {
       const initialData: NodeData = { content: "测试初始内容" };
       render(<NodeEditor {...defaultProps} initialData={initialData} />);
 
-      expect(screen.getByPlaceholderText("请输入节点内容")).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText("Enter topic content"),
+      ).toBeInTheDocument();
     });
   });
 });

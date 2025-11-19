@@ -49,13 +49,13 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   const getTitle = () => {
     switch (mode) {
       case "create":
-        return "创建新节点";
+        return "Create New Topic";
       case "edit":
-        return "编辑节点";
+        return "Edit Topic";
       case "connection":
-        return "创建连接节点";
+        return "Create Connected Topic";
       default:
-        return "节点编辑";
+        return "Topic Editor";
     }
   };
 
@@ -123,7 +123,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
           <button
             onClick={onClose}
             className="p-2 hover:bg-white hover:bg-opacity-70 rounded-lg transition-all duration-200 group"
-            aria-label="关闭边栏"
+            aria-label="Close sidebar"
           >
             <svg
               className="w-5 h-5 text-gray-500 group-hover:text-gray-700 transition-colors duration-200"

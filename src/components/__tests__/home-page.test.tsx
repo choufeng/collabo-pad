@@ -73,12 +73,12 @@ describe("HomePage 组件 - 简化版本", () => {
       // Assert
       expect(screen.getByText("协作画板")).toBeInTheDocument();
       expect(
-        screen.getByText("输入用户名和频道ID开始协作"),
+        screen.getByText("输入Username和Channel ID开始协作"),
       ).toBeInTheDocument();
-      expect(screen.getByLabelText("用户名")).toBeInTheDocument();
-      expect(screen.getByLabelText("频道ID")).toBeInTheDocument();
+      expect(screen.getByLabelText("Username")).toBeInTheDocument();
+      expect(screen.getByLabelText("Channel ID")).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: "进入画板" }),
+        screen.getByRole("button", { name: "Enter Whiteboard" }),
       ).toBeInTheDocument();
     });
 
@@ -89,69 +89,79 @@ describe("HomePage 组件 - 简化版本", () => {
       // Assert
       expect(screen.getByText("使用说明：")).toBeInTheDocument();
       expect(
-        screen.getByText("• 用户名：任意非空字符，长度不超过100"),
+        screen.getByText("• Username：任意非空字符，长度不超过100"),
       ).toBeInTheDocument();
       expect(
-        screen.getByText("• 频道ID：只能包含字母和数字，区分大小写"),
+        screen.getByText("• Channel ID：只能包含字母和数字，区分大小写"),
       ).toBeInTheDocument();
       expect(
-        screen.getByText("• 相同用户名会复用已存在的用户"),
+        screen.getByText("• 相同Username会复用已存在的用户"),
       ).toBeInTheDocument();
       expect(
-        screen.getByText("• 相同频道ID会进入已存在的频道"),
+        screen.getByText("• 相同Channel ID会进入已存在的频道"),
       ).toBeInTheDocument();
     });
   });
 
   describe("表单验证", () => {
-    it("应该验证空用户名", async () => {
+    it("应该验证空Username", async () => {
       // Arrange
       render(<HomePage />);
-      const submitButton = screen.getByRole("button", { name: "进入画板" });
+      const submitButton = screen.getByRole("button", {
+        name: "Enter Whiteboard",
+      });
 
       // Act
       await user.click(submitButton);
 
       // Assert
-      expect(screen.getByText("用户名不能为空")).toBeInTheDocument();
+      expect(screen.getByText("Username cannot be empty")).toBeInTheDocument();
     });
 
-    it("应该验证空频道ID", async () => {
+    it("应该验证空Channel ID", async () => {
       // Arrange
       render(<HomePage />);
-      const usernameInput = screen.getByLabelText("用户名");
-      const submitButton = screen.getByRole("button", { name: "进入画板" });
+      const usernameInput = screen.getByLabelText("Username");
+      const submitButton = screen.getByRole("button", {
+        name: "Enter Whiteboard",
+      });
 
       // Act
       await user.type(usernameInput, "testuser");
       await user.click(submitButton);
 
       // Assert
-      expect(screen.getByText("频道ID不能为空")).toBeInTheDocument();
+      expect(
+        screen.getByText("Channel ID cannot be empty"),
+      ).toBeInTheDocument();
     });
 
-    it("应该限制用户名最大长度为100", () => {
+    it("应该限制Username最大长度为100", () => {
       // Arrange
       render(<HomePage />);
-      const usernameInput = screen.getByLabelText("用户名");
+      const usernameInput = screen.getByLabelText("Username");
 
       // Assert
       expect(usernameInput).toHaveAttribute("maxLength", "100");
     });
 
-    it("应该验证频道ID格式", async () => {
+    it("应该验证Channel ID格式", async () => {
       // Arrange
       render(<HomePage />);
-      const channelIdInput = screen.getByLabelText("频道ID");
-      const submitButton = screen.getByRole("button", { name: "进入画板" });
+      const channelIdInput = screen.getByLabelText("Channel ID");
+      const submitButton = screen.getByRole("button", {
+        name: "Enter Whiteboard",
+      });
 
       // Act
-      await user.type(screen.getByLabelText("用户名"), "testuser");
+      await user.type(screen.getByLabelText("Username"), "testuser");
       await user.type(channelIdInput, "invalid-channel");
       await user.click(submitButton);
 
       // Assert
-      expect(screen.getByText("频道ID只能包含字母和数字")).toBeInTheDocument();
+      expect(
+        screen.getByText("Channel ID can only contain letters and numbers"),
+      ).toBeInTheDocument();
     });
   });
 
@@ -179,9 +189,11 @@ describe("HomePage 组件 - 简化版本", () => {
 
       render(<HomePage />);
 
-      const usernameInput = screen.getByLabelText("用户名");
-      const channelIdInput = screen.getByLabelText("频道ID");
-      const submitButton = screen.getByRole("button", { name: "进入画板" });
+      const usernameInput = screen.getByLabelText("Username");
+      const channelIdInput = screen.getByLabelText("Channel ID");
+      const submitButton = screen.getByRole("button", {
+        name: "Enter Whiteboard",
+      });
 
       // Act
       await user.type(usernameInput, "testuser");
@@ -216,9 +228,11 @@ describe("HomePage 组件 - 简化版本", () => {
 
       render(<HomePage />);
 
-      const usernameInput = screen.getByLabelText("用户名");
-      const channelIdInput = screen.getByLabelText("频道ID");
-      const submitButton = screen.getByRole("button", { name: "进入画板" });
+      const usernameInput = screen.getByLabelText("Username");
+      const channelIdInput = screen.getByLabelText("Channel ID");
+      const submitButton = screen.getByRole("button", {
+        name: "Enter Whiteboard",
+      });
 
       // Act
       await user.type(usernameInput, "testuser");
@@ -250,8 +264,8 @@ describe("HomePage 组件 - 简化版本", () => {
 
       render(<HomePage />);
 
-      const usernameInput = screen.getByLabelText("用户名");
-      const channelIdInput = screen.getByLabelText("频道ID");
+      const usernameInput = screen.getByLabelText("Username");
+      const channelIdInput = screen.getByLabelText("Channel ID");
       const submitButton = screen.getByRole("button", { name: "正在处理..." });
 
       // Assert
@@ -286,19 +300,19 @@ describe("HomePage 组件 - 简化版本", () => {
   });
 
   describe("输入字符限制", () => {
-    it("应该限制用户名最大长度为100", () => {
+    it("应该限制Username最大长度为100", () => {
       // Arrange
       render(<HomePage />);
-      const usernameInput = screen.getByLabelText("用户名");
+      const usernameInput = screen.getByLabelText("Username");
 
       // Assert
       expect(usernameInput).toHaveAttribute("maxLength", "100");
     });
 
-    it("应该限制频道ID最大长度为50", () => {
+    it("应该限制Channel ID最大长度为50", () => {
       // Arrange
       render(<HomePage />);
-      const channelIdInput = screen.getByLabelText("频道ID");
+      const channelIdInput = screen.getByLabelText("Channel ID");
 
       // Assert
       expect(channelIdInput).toHaveAttribute("maxLength", "50");
@@ -315,7 +329,7 @@ describe("HomePage 组件 - 简化版本", () => {
       mockGetLatestUsers.mockResolvedValue([]);
     });
 
-    it("应该从URL参数自动填充频道ID", async () => {
+    it("应该从URL参数自动填充Channel ID", async () => {
       // Arrange
       (useSearchParams as jest.Mock).mockReturnValue({
         get: jest.fn().mockReturnValue("testchannel"),
@@ -327,12 +341,12 @@ describe("HomePage 组件 - 简化版本", () => {
 
       // Assert
       await waitFor(() => {
-        const channelIdInput = screen.getByLabelText("频道ID");
+        const channelIdInput = screen.getByLabelText("Channel ID");
         expect(channelIdInput).toHaveValue("testchannel");
       });
     });
 
-    it("应该从最新用户数据自动填充用户名", async () => {
+    it("应该从最新用户数据自动填充Username", async () => {
       // Arrange
       (useSearchParams as jest.Mock).mockReturnValue({
         get: jest.fn().mockReturnValue(null),
@@ -350,7 +364,7 @@ describe("HomePage 组件 - 简化版本", () => {
 
       // Assert
       await waitFor(() => {
-        const usernameInput = screen.getByLabelText("用户名");
+        const usernameInput = screen.getByLabelText("Username");
         expect(usernameInput).toHaveValue("latestuser");
       });
     });
@@ -373,14 +387,14 @@ describe("HomePage 组件 - 简化版本", () => {
 
       // Assert
       await waitFor(() => {
-        const usernameInput = screen.getByLabelText("用户名");
-        const channelIdInput = screen.getByLabelText("频道ID");
+        const usernameInput = screen.getByLabelText("Username");
+        const channelIdInput = screen.getByLabelText("Channel ID");
         expect(usernameInput).toHaveValue("datauser");
         expect(channelIdInput).toHaveValue("urlchannel");
       });
     });
 
-    it("应该在没有URL参数时保持频道ID为空", async () => {
+    it("应该在没有URL参数时保持Channel ID为空", async () => {
       // Arrange
       (useSearchParams as jest.Mock).mockReturnValue({
         get: jest.fn().mockReturnValue(null),
@@ -392,12 +406,12 @@ describe("HomePage 组件 - 简化版本", () => {
 
       // Assert
       await waitFor(() => {
-        const channelIdInput = screen.getByLabelText("频道ID");
+        const channelIdInput = screen.getByLabelText("Channel ID");
         expect(channelIdInput).toHaveValue("");
       });
     });
 
-    it("应该在没有用户数据时保持用户名为空", async () => {
+    it("应该在没有用户数据时保持Username为空", async () => {
       // Arrange
       (useSearchParams as jest.Mock).mockReturnValue({
         get: jest.fn().mockReturnValue(null),
@@ -409,7 +423,7 @@ describe("HomePage 组件 - 简化版本", () => {
 
       // Assert
       await waitFor(() => {
-        const usernameInput = screen.getByLabelText("用户名");
+        const usernameInput = screen.getByLabelText("Username");
         expect(usernameInput).toHaveValue("");
       });
     });
@@ -425,7 +439,7 @@ describe("HomePage 组件 - 简化版本", () => {
       render(<HomePage />);
 
       await waitFor(() => {
-        const usernameInput = screen.getByLabelText("用户名");
+        const usernameInput = screen.getByLabelText("Username");
         expect(usernameInput).toHaveValue("");
       });
 
@@ -434,7 +448,7 @@ describe("HomePage 组件 - 简化版本", () => {
     });
 
     it("应该优先使用URL参数而不是本地用户数据", async () => {
-      // Arrange - 这个测试验证URL参数只影响频道ID，不影响用户名
+      // Arrange - 这个测试验证URL参数只影响Channel ID，不影响Username
       (useSearchParams as jest.Mock).mockReturnValue({
         get: jest.fn().mockReturnValue("priority-channel"),
       });
@@ -451,8 +465,8 @@ describe("HomePage 组件 - 简化版本", () => {
 
       // Assert
       await waitFor(() => {
-        const usernameInput = screen.getByLabelText("用户名");
-        const channelIdInput = screen.getByLabelText("频道ID");
+        const usernameInput = screen.getByLabelText("Username");
+        const channelIdInput = screen.getByLabelText("Channel ID");
         expect(usernameInput).toHaveValue("data-user");
         expect(channelIdInput).toHaveValue("priority-channel");
       });
@@ -475,15 +489,15 @@ describe("HomePage 组件 - 简化版本", () => {
 
       // 等待自动填充完成
       await waitFor(() => {
-        const usernameInput = screen.getByLabelText("用户名");
-        const channelIdInput = screen.getByLabelText("频道ID");
+        const usernameInput = screen.getByLabelText("Username");
+        const channelIdInput = screen.getByLabelText("Channel ID");
         expect(usernameInput).toHaveValue("original-user");
         expect(channelIdInput).toHaveValue("original-channel");
       });
 
       // Act - 修改自动填充的内容
-      const usernameInput = screen.getByLabelText("用户名");
-      const channelIdInput = screen.getByLabelText("频道ID");
+      const usernameInput = screen.getByLabelText("Username");
+      const channelIdInput = screen.getByLabelText("Channel ID");
 
       await user.clear(usernameInput);
       await user.type(usernameInput, "modified-user");
@@ -513,12 +527,14 @@ describe("HomePage 组件 - 简化版本", () => {
 
       // 等待自动填充完成
       await waitFor(() => {
-        const usernameInput = screen.getByLabelText("用户名");
+        const usernameInput = screen.getByLabelText("Username");
         expect(usernameInput).toHaveValue("validuser");
       });
 
       // Act - 尝试提交表单
-      const submitButton = screen.getByRole("button", { name: "进入画板" });
+      const submitButton = screen.getByRole("button", {
+        name: "Enter Whiteboard",
+      });
       await user.click(submitButton);
 
       // Assert - 应该成功提交，不需要进一步验证因为内容是有效的

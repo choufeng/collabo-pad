@@ -64,10 +64,10 @@ describe("Board组件", () => {
       expect(screen.getByTestId("controls")).toBeInTheDocument();
     });
 
-    it("应该包含创建节点按钮", () => {
+    it("应该包含Add Topic按钮", () => {
       render(<Board {...defaultProps} />);
 
-      const createButton = screen.getByText("创建节点");
+      const createButton = screen.getByText("Add Topic");
       expect(createButton).toBeInTheDocument();
     });
 
@@ -79,10 +79,10 @@ describe("Board组件", () => {
   });
 
   describe("节点创建功能", () => {
-    it("点击创建节点按钮应该展开侧边栏", () => {
+    it("点击Add Topic按钮应该展开侧边栏", () => {
       render(<Board {...defaultProps} />);
 
-      const createButton = screen.getByText("创建节点");
+      const createButton = screen.getByText("Add Topic");
       fireEvent.click(createButton);
 
       expect(screen.getByTestId("right-sidebar")).toBeInTheDocument();
@@ -91,7 +91,7 @@ describe("Board组件", () => {
     it("应该传递正确的模式给侧边栏", () => {
       render(<Board {...defaultProps} />);
 
-      const createButton = screen.getByText("创建节点");
+      const createButton = screen.getByText("Add Topic");
       fireEvent.click(createButton);
 
       const sidebar = screen.getByTestId("right-sidebar");
@@ -101,7 +101,7 @@ describe("Board组件", () => {
     it("应该传递空的数据给侧边栏", () => {
       render(<Board {...defaultProps} />);
 
-      const createButton = screen.getByText("创建节点");
+      const createButton = screen.getByText("Add Topic");
       fireEvent.click(createButton);
 
       const sidebar = screen.getByTestId("right-sidebar");
@@ -114,14 +114,13 @@ describe("Board组件", () => {
       render(<Board {...defaultProps} />);
 
       // 打开创建侧边栏
-      const createButton = screen.getByText("创建节点");
+      const createButton = screen.getByText("Add Topic");
       fireEvent.click(createButton);
 
       // 模拟表单提交 - 填充内容并提交
-      const textarea = screen.getByPlaceholderText("请输入节点内容");
+      const textarea = screen.getByPlaceholderText("Enter topic content");
       fireEvent.change(textarea, { target: { value: "测试节点内容" } });
-      const saveButtons = screen.getAllByRole("button", { name: "创建节点" });
-      const saveButton = saveButtons[1]; // 选择第二个按钮（侧边栏内的提交按钮）
+      const saveButton = screen.getByRole("button", { name: "Create Topic" });
       fireEvent.click(saveButton);
 
       // 验证侧边栏关闭
@@ -132,7 +131,7 @@ describe("Board组件", () => {
       render(<Board {...defaultProps} />);
 
       // 打开创建侧边栏
-      const createButton = screen.getByText("创建节点");
+      const createButton = screen.getByText("Add Topic");
       fireEvent.click(createButton);
 
       // 按ESC键
@@ -179,7 +178,7 @@ describe("Board组件", () => {
       render(<Board {...defaultProps} />);
 
       // 模拟异常情况
-      const createButton = screen.getByText("创建节点");
+      const createButton = screen.getByText("Add Topic");
       fireEvent.click(createButton);
 
       // 验证错误处理

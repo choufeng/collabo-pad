@@ -63,7 +63,7 @@ export const useUserStore = create<UserState>()(
           setCurrentUser(user);
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : "用户创建失败";
+            error instanceof Error ? error.message : "User creation failed";
           setError(errorMessage);
           throw error;
         } finally {

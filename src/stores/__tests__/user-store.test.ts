@@ -166,11 +166,11 @@ describe("用户状态管理 - 简化版本", () => {
       expect(result.current.error).toBeNull();
     });
 
-    it("应该处理用户创建失败", async () => {
+    it("应该处理User creation failed", async () => {
       // Arrange
       const { result } = renderHook(() => useUserStore());
       const username = "testuser";
-      const error = new Error("用户创建失败");
+      const error = new Error("User creation failed");
 
       mockUserDataService.createOrGetUser.mockRejectedValue(error);
 
@@ -190,7 +190,7 @@ describe("用户状态管理 - 简化版本", () => {
 
       expect(result.current.currentUser).toBeNull();
       expect(result.current.isLoading).toBe(false);
-      expect(result.current.error).toBe("用户创建失败");
+      expect(result.current.error).toBe("User creation failed");
     });
 
     it("应该处理空用户名的输入", async () => {

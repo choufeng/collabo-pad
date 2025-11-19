@@ -1,8 +1,11 @@
 # url-handling Specification
 
 ## Purpose
+
 TBD - created by archiving change enhance-homepage-auto-fill. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: URL参数解析
 
 系统 SHALL 支持解析URL查询参数中的频道ID，用于首页表单的自动填充。
@@ -58,4 +61,3 @@ TBD - created by archiving change enhance-homepage-auto-fill. Update Purpose aft
 - **AND** 必须停止后续的自动填充更新
 - **AND** 必须保持表单验证的正常工作
 - **AND** 必须在用户提交时使用最终输入的值
-

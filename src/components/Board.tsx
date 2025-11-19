@@ -14,7 +14,6 @@ import {
   MiniMap,
   BackgroundVariant,
   OnConnectStart,
-  OnConnectEnd,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import RightSidebar, { SidebarMode, NodeData } from "./RightSidebar";
@@ -147,7 +146,7 @@ export default function Board() {
   }, []);
 
   // 连接结束事件（在空白区域结束）
-  const onConnectEnd: OnConnectStart = useCallback(
+  const onConnectEnd = useCallback(
     (event) => {
       // 检查是否在空白区域结束连接
       const reactFlowBounds = (
@@ -185,10 +184,12 @@ export default function Board() {
       </ReactFlow>
 
       <button
+        type="button"
         onClick={openCreateSidebar}
-        className="absolute top-4 left-4 z-10 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg shadow-lg transition-colors duration-200"
+        tabIndex={0}
+        className="absolute top-4 right-4 z-10 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg shadow-lg transition-colors duration-200"
       >
-        创建节点
+        Add Topic
       </button>
 
       <RightSidebar
