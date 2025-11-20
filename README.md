@@ -36,11 +36,13 @@ pnpm install
 ### 环境配置
 
 1. 复制环境配置模板：
+
 ```bash
 cp .env.local.example .env.local
 ```
 
 2. 根据需要修改 `.env.local` 中的Redis配置：
+
 ```env
 # Redis Configuration
 REDIS_HOST=localhost
@@ -75,15 +77,18 @@ pnpm dev
 ### API端点
 
 #### Redis连接管理
+
 - `POST /api/redis/connect` - 建立Redis连接
 - `GET /api/redis/connect` - 检查连接状态
 
 #### 数据操作
+
 - `POST /api/redis/test-data` - 写入测试数据
 - `GET /api/redis/test-data?key={key}` - 读取测试数据
 - `DELETE /api/redis/test-data?key={key}` - 删除测试数据
 
 #### 实时流
+
 - `GET /api/redis/stream` - SSE实时数据流
 
 ## 项目结构
@@ -118,25 +123,25 @@ src/
 ### Redis客户端使用
 
 ```typescript
-import redisService from '@/lib/redis';
+import redisService from "@/lib/redis";
 
 // 连接Redis
 await redisService.connect();
 
 // 基础操作
-await redisService.set('key', 'value');
-const value = await redisService.get('key');
-await redisService.del('key');
+await redisService.set("key", "value");
+const value = await redisService.get("key");
+await redisService.del("key");
 
 // 发布/订阅
-await redisService.publish('channel', 'message');
-await redisService.subscribe('channel', (channel, message) => {
+await redisService.publish("channel", "message");
+await redisService.subscribe("channel", (channel, message) => {
   console.log(`收到消息 ${channel}: ${message}`);
 });
 
 // 流操作
-await redisService.addToStream('stream', { key1: 'value1', key2: 'value2' });
-const messages = await redisService.readStream('stream');
+await redisService.addToStream("stream", { key1: "value1", key2: "value2" });
+const messages = await redisService.readStream("stream");
 ```
 
 ## 测试
