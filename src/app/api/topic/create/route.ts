@@ -26,6 +26,8 @@ export async function POST(request: NextRequest) {
           success: false,
           message: "频道ID是必需的且必须是字符串",
           error: "MISSING_CHANNEL_ID",
+          topic: {} as any,
+          messageId: "",
         } as CreateTopicResponse,
         { status: 400 },
       );
@@ -41,6 +43,8 @@ export async function POST(request: NextRequest) {
           success: false,
           message: "主题内容是必需的且不能为空",
           error: "MISSING_CONTENT",
+          topic: {} as any,
+          messageId: "",
         } as CreateTopicResponse,
         { status: 400 },
       );
@@ -52,6 +56,8 @@ export async function POST(request: NextRequest) {
           success: false,
           message: "主题内容长度不能超过1000个字符",
           error: "CONTENT_TOO_LONG",
+          topic: {} as any,
+          messageId: "",
         } as CreateTopicResponse,
         { status: 400 },
       );
@@ -63,6 +69,8 @@ export async function POST(request: NextRequest) {
           success: false,
           message: "用户ID是必需的",
           error: "MISSING_USER_ID",
+          topic: {} as any,
+          messageId: "",
         } as CreateTopicResponse,
         { status: 400 },
       );
@@ -74,6 +82,8 @@ export async function POST(request: NextRequest) {
           success: false,
           message: "用户名是必需的",
           error: "MISSING_USER_NAME",
+          topic: {} as any,
+          messageId: "",
         } as CreateTopicResponse,
         { status: 400 },
       );
@@ -86,6 +96,8 @@ export async function POST(request: NextRequest) {
           success: false,
           message: "频道ID只能包含字母、数字、下划线和连字符",
           error: "INVALID_CHANNEL_ID",
+          topic: {} as any,
+          messageId: "",
         } as CreateTopicResponse,
         { status: 400 },
       );
@@ -101,6 +113,8 @@ export async function POST(request: NextRequest) {
           success: false,
           message: "父主题ID必须是有效的字符串",
           error: "INVALID_PARENT_ID",
+          topic: {} as any,
+          messageId: "",
         } as CreateTopicResponse,
         { status: 400 },
       );
@@ -158,6 +172,8 @@ export async function POST(request: NextRequest) {
           success: false,
           message: "请求体格式无效，请确保发送有效的JSON",
           error: "INVALID_JSON",
+          topic: {} as any,
+          messageId: "",
         } as CreateTopicResponse,
         { status: 400 },
       );

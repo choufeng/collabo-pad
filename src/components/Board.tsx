@@ -38,6 +38,13 @@ export interface BoardProps {
   connectionStatus?: "disconnected" | "connecting" | "connected" | "error";
   sseError?: string | null;
   onSSEErrorClear?: () => void;
+  user?: {
+    id: string;
+    name: string;
+  };
+  channel?: {
+    id: string;
+  };
 }
 
 // 注册自定义节点类型
@@ -52,6 +59,8 @@ export default function Board({
   connectionStatus = "disconnected",
   sseError = null,
   onSSEErrorClear,
+  user,
+  channel,
 }: BoardProps = {}) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -433,6 +442,8 @@ export default function Board({
         onSaveNode={handleSaveNode}
         onUpdateNode={handleUpdateNode}
         onCreateChildNode={handleCreateChildNode}
+        user={user}
+        channel={channel}
       />
     </div>
   );

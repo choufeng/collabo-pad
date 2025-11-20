@@ -2,12 +2,16 @@
 
 import React, { useState, useEffect } from "react";
 import { SidebarMode, NodeData } from "./RightSidebar";
+import { createTopicAPI } from "@/lib/topicApi";
+import type { CreateTopicRequest } from "@/types/redis-stream";
 
 // 主题详情显示组件的 Props 接口
 interface TopicDetailsDisplayProps {
   initialData?: NodeData;
   onCreateChildNode?: (parentId: string, content: string) => void;
   selectedNodeId?: string;
+  user?: { id: string; name: string };
+  channel?: { id: string };
 }
 
 // 主题详情显示组件
@@ -15,6 +19,8 @@ const TopicDetailsDisplay: React.FC<TopicDetailsDisplayProps> = ({
   initialData,
   onCreateChildNode,
   selectedNodeId,
+  user,
+  channel,
 }) => {
   // 子节点表单状态
   const [childNodeContent, setChildNodeContent] = useState("");
@@ -65,20 +71,64 @@ const TopicDetailsDisplay: React.FC<TopicDetailsDisplayProps> = ({
       return;
     }
 
-    if (!onCreateChildNode || !selectedNodeId) {
-      return;
-    }
-
     setIsCreatingChild(true);
 
+    // 调试信息
+    console.log("NodeEditor handleCreateChildNode - 调试信息:");
+    console.log("  selectedNodeId:", selectedNodeId);
+    console.log("  childNodeContent:", childNodeContent);
+    console.log("  user:", user);
+    console.log("  channel:", channel);
+
     try {
-      await onCreateChildNode(selectedNodeId, childNodeContent.trim());
-      setChildNodeContent(""); // 清空表单
-      setChildNodeErrors({});
+      if (user && channel) {
+        console.log("执行API创建子主题逻辑");
+        // 调用API创建子主题
+        const requestData: CreateTopicRequest = {
+          parent_id: selectedNodeId,
+          channel_id: channel.id,
+          content: childNodeContent.trim(),
+          user_id: user.id,
+          user_name: user.name,
+        };
+
+        console.log("发送子主题API请求:", requestData);
+
+        const response = await createTopicAPI(requestData);
+
+        console.log("子主题API响应:", response);
+
+        if (response.success) {
+          // API调用成功，调用原有回调（如果存在）
+          if (onCreateChildNode && selectedNodeId) {
+            onCreateChildNode(selectedNodeId, childNodeContent.trim());
+          }
+          setChildNodeContent(""); // 清空表单
+          setChildNodeErrors({});
+        } else {
+          throw new Error(response.message || "Failed to create child topic");
+        }
+      } else {
+        console.log("执行回退逻辑 - 条件不满足");
+        console.log("  !!user:", !!user);
+        console.log("  !!channel:", !!channel);
+        console.log("  !!onCreateChildNode:", !!onCreateChildNode);
+
+        if (onCreateChildNode && selectedNodeId) {
+          // 回退到原有逻辑（兼容性）
+          onCreateChildNode(selectedNodeId, childNodeContent.trim());
+          setChildNodeContent(""); // 清空表单
+          setChildNodeErrors({});
+        } else {
+          throw new Error("Missing required data for child topic creation");
+        }
+      }
     } catch (error) {
       console.error("Failed to create child node:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to create child topic";
       setChildNodeErrors({
-        submit: "Failed to create child topic, please try again",
+        submit: errorMessage,
       });
     } finally {
       setIsCreatingChild(false);
@@ -369,6 +419,8 @@ interface NodeEditorProps {
   onSave: (nodeId: string | NodeData, data?: NodeData) => void;
   onCancel: () => void;
   onCreateChildNode?: (parentId: string, content: string) => void; // 新增：创建子节点的回调
+  user?: { id: string; name: string }; // 新增：用户信息
+  channel?: { id: string }; // 新增：频道信息
 }
 
 const NodeEditor: React.FC<NodeEditorProps> = ({
@@ -379,6 +431,8 @@ const NodeEditor: React.FC<NodeEditorProps> = ({
   onSave,
   onCancel,
   onCreateChildNode,
+  user,
+  channel,
 }) => {
   // 创建模式的状态管理
   const [formData, setFormData] = useState<NodeData>({
@@ -386,13 +440,6 @@ const NodeEditor: React.FC<NodeEditorProps> = ({
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // 子节点表单状态（在编辑模式下仍然需要）
-  const [childNodeContent, setChildNodeContent] = useState("");
-  const [isCreatingChild, setIsCreatingChild] = useState(false);
-  const [childNodeErrors, setChildNodeErrors] = useState<
-    Record<string, string>
-  >({});
 
   // 只在创建模式和连接模式下管理表单数据
   useEffect(() => {
@@ -444,17 +491,60 @@ const NodeEditor: React.FC<NodeEditorProps> = ({
 
     setIsSubmitting(true);
 
+    // 调试信息
+    console.log("NodeEditor handleSubmit - 调试信息:");
+    console.log("  mode:", mode);
+    console.log("  user:", user);
+    console.log("  channel:", channel);
+    console.log("  formData:", formData);
+    console.log("  selectedNodeId:", selectedNodeId);
+
     try {
       if (mode === "edit" && selectedNodeId && onSave) {
+        console.log("执行编辑模式逻辑");
         // 编辑模式：更新现有节点
         onSave(selectedNodeId, formData);
+      } else if (mode === "create" && user && channel) {
+        console.log("执行API创建模式逻辑");
+        // 创建模式：调用API创建新主题
+        const requestData: CreateTopicRequest = {
+          channel_id: channel.id,
+          content: formData.content.trim(),
+          user_id: user.id,
+          user_name: user.name,
+        };
+
+        console.log("发送API请求:", requestData);
+
+        const response = await createTopicAPI(requestData);
+
+        console.log("API响应:", response);
+
+        if (response.success) {
+          // API调用成功，调用onSave回调
+          onSave(formData);
+          // 清空表单
+          setFormData({ content: "" });
+        } else {
+          throw new Error(response.message || "Failed to create topic");
+        }
       } else {
-        // 创建模式：创建新节点
-        onSave(formData);
+        console.log("执行回退逻辑 - 条件不满足");
+        console.log("  mode === 'create':", mode === "create");
+        console.log("  !!user:", !!user);
+        console.log("  !!channel:", !!channel);
+        console.log("  !!onSave:", !!onSave);
+
+        if (onSave) {
+          // 回退到原有逻辑（兼容性）
+          onSave(formData);
+        }
       }
     } catch (error) {
-      console.error("保存节点失败:", error);
-      setErrors({ submit: "Save failed, please try again" });
+      console.error("创建主题失败:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to create topic";
+      setErrors({ submit: errorMessage });
     } finally {
       setIsSubmitting(false);
     }
@@ -473,62 +563,6 @@ const NodeEditor: React.FC<NodeEditorProps> = ({
     }
   };
 
-  // 子节点表单处理函数
-  const handleChildNodeInputChange = (value: string) => {
-    setChildNodeContent(value);
-
-    // 清除该字段的错误信息
-    if (childNodeErrors.content) {
-      setChildNodeErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors.content;
-        return newErrors;
-      });
-    }
-  };
-
-  const validateChildNodeForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!childNodeContent || !childNodeContent.trim()) {
-      newErrors.content = "Child topic content cannot be empty";
-    }
-
-    if (childNodeContent && childNodeContent.length > 500) {
-      newErrors.content = "Child topic content cannot exceed 500 characters";
-    }
-
-    setChildNodeErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleCreateChildNode = async (e: React.FormEvent) => {
-    e.preventDefault(); // 防止触发表单提交
-
-    if (!validateChildNodeForm()) {
-      return;
-    }
-
-    if (!onCreateChildNode || !selectedNodeId) {
-      return;
-    }
-
-    setIsCreatingChild(true);
-
-    try {
-      await onCreateChildNode(selectedNodeId, childNodeContent.trim());
-      setChildNodeContent(""); // 清空表单
-      setChildNodeErrors({});
-    } catch (error) {
-      console.error("Failed to create child node:", error);
-      setChildNodeErrors({
-        submit: "Failed to create child topic, please try again",
-      });
-    } finally {
-      setIsCreatingChild(false);
-    }
-  };
-
   // 编辑模式：显示主题详情
   if (mode === "edit") {
     return (
@@ -536,6 +570,8 @@ const NodeEditor: React.FC<NodeEditorProps> = ({
         initialData={initialData}
         onCreateChildNode={onCreateChildNode}
         selectedNodeId={selectedNodeId}
+        user={user}
+        channel={channel}
       />
     );
   }
@@ -683,138 +719,6 @@ const NodeEditor: React.FC<NodeEditorProps> = ({
           </button>
         </div>
       </div>
-
-      {/* 子节点创建区域 - 仅在编辑模式显示 */}
-      {mode === "edit" && onCreateChildNode && (
-        <>
-          {/* 分割线 */}
-          <div className="border-t border-gray-200 my-6"></div>
-
-          {/* 子节点创建表单 */}
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label
-                htmlFor="child-node-content"
-                className="block text-sm font-medium text-gray-700 mb-2 flex items-center"
-              >
-                <svg
-                  className="w-4 h-4 mr-1 text-green-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 8h8"
-                  />
-                </svg>
-                Add Child Topic
-              </label>
-              <div className="relative">
-                <textarea
-                  id="child-node-content"
-                  value={childNodeContent}
-                  onChange={(e) => handleChildNodeInputChange(e.target.value)}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 resize-vertical ${
-                    childNodeErrors.content
-                      ? "border-red-500 bg-red-50"
-                      : "border-gray-300 hover:border-gray-400"
-                  }`}
-                  placeholder="Enter child topic content..."
-                  rows={4}
-                  maxLength={500}
-                  disabled={isCreatingChild}
-                />
-                <div className="absolute bottom-3 right-3 text-xs text-gray-400">
-                  {childNodeContent?.length || 0}/500
-                </div>
-              </div>
-              {childNodeErrors.content && (
-                <div className="flex items-center mt-1 text-red-600">
-                  <svg
-                    className="w-4 h-4 mr-1"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <p className="text-sm">{childNodeErrors.content}</p>
-                </div>
-              )}
-            </div>
-
-            {/* 子节点创建按钮 */}
-            <button
-              type="button" // 使用button而不是submit，避免触发表单提交
-              onClick={handleCreateChildNode}
-              disabled={isCreatingChild || !childNodeContent.trim()}
-              className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 disabled:from-green-400 disabled:to-green-500 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl disabled:shadow-none"
-            >
-              {isCreatingChild ? (
-                <div className="flex items-center justify-center">
-                  <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Creating...
-                </div>
-              ) : (
-                "Create Child Topic"
-              )}
-            </button>
-
-            {/* 子节点错误提示 */}
-            {childNodeErrors.submit && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                <div className="flex items-center">
-                  <svg
-                    className="w-5 h-5 text-red-600 mr-2"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <p className="text-sm text-red-800">
-                    {childNodeErrors.submit}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </>
-      )}
     </form>
   );
 };

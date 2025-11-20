@@ -21,6 +21,13 @@ interface RightSidebarProps {
   onSaveNode: (data: NodeData) => void;
   onUpdateNode: (nodeId: string, data: NodeData) => void;
   onCreateChildNode?: (parentId: string, content: string) => void; // 创建子节点的回调
+  user?: {
+    id: string;
+    name: string;
+  };
+  channel?: {
+    id: string;
+  };
 }
 
 export interface NodeData {
@@ -48,7 +55,14 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   onSaveNode,
   onUpdateNode,
   onCreateChildNode,
+  user,
+  channel,
 }) => {
+  // 调试信息
+  console.log("RightSidebar - 调试信息:");
+  console.log("  mode:", mode);
+  console.log("  user:", user);
+  console.log("  channel:", channel);
   // ESC 键关闭边栏
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -191,6 +205,8 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
               selectedNodeId={selectedNodeId}
               sourceNodeId={sourceNodeId}
               initialData={initialData}
+              user={user}
+              channel={channel}
               onSave={(nodeIdOrData, data) => {
                 if (typeof nodeIdOrData === "string" && data) {
                   // 编辑模式：调用 onUpdateNode

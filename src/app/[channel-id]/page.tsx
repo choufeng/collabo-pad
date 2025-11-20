@@ -113,6 +113,17 @@ export default function BoardPage() {
       connectionStatus={connectionStatus}
       sseError={sseError}
       onSSEErrorClear={clearError}
+      user={
+        currentUser
+          ? {
+              id: currentUser.id,
+              name: currentUser.username,
+            }
+          : undefined
+      }
+      channel={{
+        id: channelId,
+      }}
     />
   );
 }
