@@ -88,3 +88,14 @@ Object.defineProperty(window, "crypto", {
   },
   writable: true,
 });
+
+// Mock Next.js server APIs
+jest.mock("next/server", () => ({
+  NextRequest: jest.fn(),
+  NextResponse: {
+    json: jest.fn((data, init) => ({
+      status: init?.status || 200,
+      json: async () => data,
+    })),
+  },
+}));

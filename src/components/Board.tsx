@@ -265,7 +265,11 @@ export default function Board() {
       );
 
       // 创建连接线
-      const newEdge = createParentChildEdge(parentId, newNode.id);
+      const newEdge = createParentChildEdge(
+        parentNode as ExtendedNode,
+        newNode as ExtendedNode,
+        edges,
+      );
 
       // 更新状态
       setNodes(updatedNodes);
