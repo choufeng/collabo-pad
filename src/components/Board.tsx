@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import {
   ReactFlow,
   Node,
@@ -25,19 +25,43 @@ import {
   updateParentChildRelation,
   createParentChildEdge,
 } from "@/utils/node-hierarchy";
+import type { TopicNodeData } from "@/utils/topic-to-node";
 
 const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
+
+// Board 组件 Props 接口
+export interface BoardProps {
+  initialNodes?: Node[];
+  initialEdges?: Edge[];
+  channelId?: string;
+  connectionStatus?: "disconnected" | "connecting" | "connected" | "error";
+  sseError?: string | null;
+  onSSEErrorClear?: () => void;
+}
 
 // 注册自定义节点类型
 const nodeTypes: NodeTypes = {
   custom: CustomNode,
 };
 
-export default function Board() {
+export default function Board({
+  initialNodes = [],
+  initialEdges = [],
+  channelId,
+  connectionStatus = "disconnected",
+  sseError = null,
+  onSSEErrorClear,
+}: BoardProps = {}) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [nodeId, setNodeId] = useState(1);
+
+  // 同步外部数据变化到内部状态
+  useEffect(() => {
+    setNodes(initialNodes);
+    setEdges(initialEdges);
+  }, [initialNodes, initialEdges, setNodes, setEdges]);
 
   // 侧边栏状态管理
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -322,6 +346,56 @@ export default function Board() {
 
   return (
     <div className="w-screen h-screen relative">
+      {/* SSE 连接状态指示器 */}
+      <div className="absolute top-4 left-4 z-10 flex items-center space-x-2">
+        <div
+          className={`px-3 py-1 rounded-full text-xs font-medium ${
+            connectionStatus === "connected"
+              ? "bg-green-100 text-green-800"
+              : connectionStatus === "connecting"
+                ? "bg-yellow-100 text-yellow-800"
+                : connectionStatus === "error"
+                  ? "bg-red-100 text-red-800"
+                  : "bg-gray-100 text-gray-800"
+          }`}
+        >
+          {connectionStatus === "connected"
+            ? "SSE 已连接"
+            : connectionStatus === "connecting"
+              ? "SSE 连接中..."
+              : connectionStatus === "error"
+                ? "SSE 错误"
+                : "SSE 未连接"}
+        </div>
+        {channelId && (
+          <span className="text-xs text-gray-600 bg-white px-2 py-1 rounded shadow">
+            频道: {channelId}
+          </span>
+        )}
+      </div>
+
+      {/* SSE 错误提示 */}
+      {sseError && (
+        <div className="absolute top-16 left-4 z-10 max-w-md">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 shadow-lg">
+            <div className="flex justify-between items-start">
+              <div className="flex-1">
+                <h4 className="text-sm font-medium text-red-800">连接错误</h4>
+                <p className="text-xs text-red-600 mt-1">{sseError}</p>
+              </div>
+              {onSSEErrorClear && (
+                <button
+                  onClick={onSSEErrorClear}
+                  className="ml-2 text-red-500 hover:text-red-700 text-sm"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <ReactFlow
         nodes={nodes}
         edges={edges}

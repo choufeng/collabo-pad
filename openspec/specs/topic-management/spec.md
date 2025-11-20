@@ -1,8 +1,11 @@
 # topic-management Specification
 
 ## Purpose
+
 TBD - created by archiving change add-topic-api-with-sse. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: 主题创建和管理API
 
 系统 MUST 提供主题创建和管理功能，支持用户创建包含层级关系和频道归属的主题内容。
@@ -91,4 +94,3 @@ TBD - created by archiving change add-topic-api-with-sse. Update Purpose after a
 - **AND** 必须过滤HTML和JavaScript标签防止XSS
 - **AND** 必须验证用户权限和身份
 - **AND** 必须记录操作日志用于审计
-
