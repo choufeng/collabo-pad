@@ -97,6 +97,10 @@ export interface Topic {
   metadata?: Record<string, any>;
   tags?: string[];
   status?: "active" | "archived" | "deleted";
+  /** 画布上的 x 坐标位置（像素） */
+  position_x?: number;
+  /** 画布上的 y 坐标位置（像素） */
+  position_y?: number;
 }
 
 export interface CreateTopicRequest {
@@ -107,6 +111,10 @@ export interface CreateTopicRequest {
   user_name: string;
   metadata?: Record<string, any>;
   tags?: string[];
+  /** 画布上的 x 坐标位置（像素） */
+  x?: number;
+  /** 画布上的 y 坐标位置（像素） */
+  y?: number;
 }
 
 export interface CreateTopicResponse {

@@ -8,6 +8,7 @@ export type SidebarMode =
   | "edit"
   | "connection"
   | "child-comment"
+  | "position-context"
   | null;
 
 interface RightSidebarProps {
@@ -17,6 +18,7 @@ interface RightSidebarProps {
   sourceNodeId?: string; // 用于连接线模式
   parentNodeData?: NodeData; // 子评论模式的父节点数据
   initialData?: NodeData; // 编辑模式的初始数据
+  clickPosition?: { x: number; y: number } | null; // 右键点击位置
   onClose: () => void;
   onSaveNode: (data: NodeData) => void;
   onUpdateNode: (nodeId: string, data: NodeData) => void;
@@ -51,6 +53,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   sourceNodeId,
   parentNodeData,
   initialData,
+  clickPosition,
   onClose,
   onSaveNode,
   onUpdateNode,
@@ -205,6 +208,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
               selectedNodeId={selectedNodeId}
               sourceNodeId={sourceNodeId}
               initialData={initialData}
+              clickPosition={clickPosition}
               user={user}
               channel={channel}
               onSave={(nodeIdOrData, data) => {

@@ -156,7 +156,15 @@ function calculateNodePosition(
   level: number,
   options: Required<TopicToNodeOptions>,
 ): { x: number; y: number } {
-  // 基于层级的基础位置
+  // 如果主题有存储的坐标信息，优先使用
+  if (topic.position_x !== undefined && topic.position_y !== undefined) {
+    return {
+      x: topic.position_x,
+      y: topic.position_y,
+    };
+  }
+
+  // 否则基于层级的基础位置计算（向后兼容）
   const basePosition = options.levels[level] || options.defaultPosition;
 
   // 基于时间戳的随机偏移，避免节点完全重叠

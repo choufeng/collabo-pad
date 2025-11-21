@@ -15,10 +15,13 @@ import {
   BackgroundVariant,
   OnConnectStart,
   NodeTypes,
+  useReactFlow,
+  ReactFlowProvider,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import RightSidebar, { SidebarMode, NodeData } from "./RightSidebar";
 import CustomNode from "./CustomNode";
+import ContextMenu, { ContextMenuItem } from "./ContextMenu";
 import {
   ExtendedNode,
   createChildNodeData,
@@ -52,7 +55,8 @@ const nodeTypes: NodeTypes = {
   custom: CustomNode,
 };
 
-export default function Board({
+// 内部组件，使用 ReactFlow context
+function BoardWithProvider({
   initialNodes = [],
   initialEdges = [],
   channelId,
@@ -61,10 +65,13 @@ export default function Board({
   onSSEErrorClear,
   user,
   channel,
-}: BoardProps = {}) {
+}: BoardProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [nodeId, setNodeId] = useState(1);
+
+  // ReactFlow 实例，用于坐标转换
+  const { getViewport, screenToFlowPosition } = useReactFlow();
 
   // 同步外部数据变化到内部状态
   useEffect(() => {
@@ -82,6 +89,27 @@ export default function Board({
   // 子评论相关状态
   const [parentNodeData, setParentNodeData] = useState<NodeData>();
 
+  // 右键菜单相关状态
+  const [contextMenu, setContextMenu] = useState<{
+    visible: boolean;
+    x: number;
+    y: number;
+    canvasX: number;
+    canvasY: number;
+  }>({
+    visible: false,
+    x: 0,
+    y: 0,
+    canvasX: 0,
+    canvasY: 0,
+  });
+
+  // 点击位置坐标（用于创建主题）
+  const [clickPosition, setClickPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
     [setEdges],
@@ -95,12 +123,14 @@ export default function Board({
       sourceId?: string,
       initialData?: NodeData,
       parentData?: NodeData,
+      position?: { x: number; y: number },
     ) => {
       setSidebarMode(mode);
       setSelectedNodeId(nodeId);
       setConnectionSource(sourceId);
       setInitialNodeData(initialData);
       setParentNodeData(parentData);
+      setClickPosition(position || null);
       setSidebarOpen(true);
     },
     [],
@@ -114,6 +144,7 @@ export default function Board({
     setConnectionSource(undefined);
     setInitialNodeData(undefined);
     setParentNodeData(undefined);
+    setClickPosition(null);
   }, []);
 
   // 创建节点（旧版本，现在改为打开侧边栏）
@@ -353,6 +384,76 @@ export default function Board({
     [connectionSource, openSidebar],
   );
 
+  // 右键事件处理函数
+  const handleContextMenu = useCallback(
+    (event: React.MouseEvent) => {
+      event.preventDefault(); // 阻止浏览器默认右键菜单
+
+      // 获取点击位置相对于页面的坐标
+      const clickX = event.clientX;
+      const clickY = event.clientY;
+
+      // 将屏幕坐标转换为画布坐标
+      const canvasPosition = screenToFlowPosition({ x: clickX, y: clickY });
+
+      // 检查是否点击在节点上
+      const target = event.target as HTMLElement;
+      const isNode = target.closest(".react-flow__node");
+
+      // 构建菜单项
+      const menuItems: ContextMenuItem[] = [
+        {
+          id: "add-topic",
+          label: "Add Topic",
+          onClick: () => {
+            // 打开位置上下文模式的侧边栏，传递画布坐标
+            openSidebar(
+              "position-context",
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              canvasPosition,
+            );
+          },
+        },
+      ];
+
+      // 可以根据是否点击在节点上添加不同的菜单项
+      if (isNode) {
+        menuItems.push({
+          id: "add-child-topic",
+          label: "Add Child Topic",
+          onClick: () => {
+            // 可以在这里实现添加子主题的逻辑
+            console.log("添加子主题功能待实现");
+          },
+        });
+      }
+
+      // 显示右键菜单
+      setContextMenu({
+        visible: true,
+        x: clickX,
+        y: clickY,
+        canvasX: canvasPosition.x,
+        canvasY: canvasPosition.y,
+      });
+    },
+    [openSidebar, screenToFlowPosition],
+  );
+
+  // 关闭右键菜单的函数
+  const closeContextMenu = useCallback(() => {
+    setContextMenu({
+      visible: false,
+      x: 0,
+      y: 0,
+      canvasX: 0,
+      canvasY: 0,
+    });
+  }, []);
+
   return (
     <div className="w-screen h-screen relative">
       {/* SSE 连接状态指示器 */}
@@ -415,6 +516,7 @@ export default function Board({
         onNodeClick={onNodeClick}
         onConnectStart={onConnectStart}
         onConnectEnd={onConnectEnd}
+        onContextMenu={handleContextMenu}
         fitView
       >
         <Controls />
@@ -438,6 +540,7 @@ export default function Board({
         sourceNodeId={connectionSource}
         initialData={initialNodeData}
         parentNodeData={parentNodeData}
+        clickPosition={clickPosition}
         onClose={closeSidebar}
         onSaveNode={handleSaveNode}
         onUpdateNode={handleUpdateNode}
@@ -445,6 +548,39 @@ export default function Board({
         user={user}
         channel={channel}
       />
+
+      {/* 右键上下文菜单 */}
+      <ContextMenu
+        visible={contextMenu.visible}
+        x={contextMenu.x}
+        y={contextMenu.y}
+        items={[
+          {
+            id: "add-topic",
+            label: "Add Topic",
+            onClick: () => {
+              openSidebar(
+                "position-context",
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                { x: contextMenu.canvasX, y: contextMenu.canvasY },
+              );
+            },
+          },
+        ]}
+        onClose={closeContextMenu}
+      />
     </div>
+  );
+}
+
+// 主要的 Board 组件，包装 ReactFlowProvider
+export default function Board(props: BoardProps) {
+  return (
+    <ReactFlowProvider>
+      <BoardWithProvider {...props} />
+    </ReactFlowProvider>
   );
 }

@@ -17,6 +17,8 @@ export async function POST(request: NextRequest) {
       user_name,
       metadata,
       tags,
+      x,
+      y,
     } = body as CreateTopicRequest;
 
     // 基本参数验证
@@ -120,6 +122,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 坐标参数验证（如果提供）
+    if (x !== undefined && (typeof x !== "number" || isNaN(x) || x < 0)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "x坐标必须是非负数",
+          error: "INVALID_X_COORDINATE",
+          topic: {} as any,
+          messageId: "",
+        } as CreateTopicResponse,
+        { status: 400 },
+      );
+    }
+
+    if (y !== undefined && (typeof y !== "number" || isNaN(y) || y < 0)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "y坐标必须是非负数",
+          error: "INVALID_Y_COORDINATE",
+          topic: {} as any,
+          messageId: "",
+        } as CreateTopicResponse,
+        { status: 400 },
+      );
+    }
+
     // 内容安全检查 - 过滤潜在的恶意内容
     const sanitizedContent = content
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
@@ -138,6 +167,8 @@ export async function POST(request: NextRequest) {
       tags: Array.isArray(tags)
         ? tags.filter((tag) => typeof tag === "string")
         : undefined,
+      x: x !== undefined ? Math.round(x) : undefined,
+      y: y !== undefined ? Math.round(y) : undefined,
     };
 
     // 确保Redis连接

@@ -424,6 +424,7 @@ interface NodeEditorProps {
   selectedNodeId?: string;
   sourceNodeId?: string;
   initialData?: NodeData; // 新增：用于编辑模式的初始数据
+  clickPosition?: { x: number; y: number } | null; // 右键点击位置
   onSave: (nodeId: string | NodeData, data?: NodeData) => void;
   onCancel: () => void;
   onCreateChildNode?: (parentId: string, content: string) => void; // 新增：创建子节点的回调
@@ -436,6 +437,7 @@ const NodeEditor: React.FC<NodeEditorProps> = ({
   selectedNodeId,
   sourceNodeId,
   initialData,
+  clickPosition,
   onSave,
   onCancel,
   onCreateChildNode,
@@ -512,7 +514,11 @@ const NodeEditor: React.FC<NodeEditorProps> = ({
         console.log("执行编辑模式逻辑");
         // 编辑模式：更新现有节点
         onSave(selectedNodeId, formData);
-      } else if (mode === "create" && user && channel) {
+      } else if (
+        (mode === "create" || mode === "position-context") &&
+        user &&
+        channel
+      ) {
         console.log("执行API创建模式逻辑");
         // 创建模式：调用API创建新主题
         const requestData: CreateTopicRequest = {
@@ -520,6 +526,9 @@ const NodeEditor: React.FC<NodeEditorProps> = ({
           content: formData.content.trim(),
           user_id: user.id,
           user_name: user.name,
+          // 如果是从右键菜单打开的，包含坐标位置
+          x: clickPosition?.x,
+          y: clickPosition?.y,
         };
 
         console.log("发送API请求:", requestData);

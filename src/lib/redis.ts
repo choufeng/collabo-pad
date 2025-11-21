@@ -511,6 +511,8 @@ export class RedisService {
         metadata: request.metadata,
         tags: request.tags,
         status: "active",
+        position_x: request.x,
+        position_y: request.y,
       };
 
       // 构建Stream数据
@@ -524,6 +526,8 @@ export class RedisService {
         metadata: request.metadata ? JSON.stringify(request.metadata) : "",
         tags: request.tags ? JSON.stringify(request.tags) : "",
         status: "active",
+        position_x: request.x !== undefined ? request.x.toString() : "",
+        position_y: request.y !== undefined ? request.y.toString() : "",
       };
 
       // 使用频道ID作为Stream键名
@@ -570,6 +574,8 @@ export class RedisService {
       metadata: data.metadata ? JSON.parse(data.metadata) : undefined,
       tags: data.tags ? JSON.parse(data.tags) : undefined,
       status: (data.status as "active" | "archived" | "deleted") || "active",
+      position_x: data.position_x ? parseInt(data.position_x, 10) : undefined,
+      position_y: data.position_y ? parseInt(data.position_y, 10) : undefined,
     };
 
     return topic;

@@ -3,7 +3,9 @@
 ## Purpose
 
 TBD - created by archiving change add-topic-api-with-sse. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: 主题创建和管理API
 
 系统 MUST 提供主题创建和管理功能，支持用户通过表单界面创建包含层级关系和频道归属的主题内容。在创建子主题时，系统 SHALL 正确处理 parent_id 的格式转换，确保提交给 API 的数据使用原始的 topic ID 而不是 ReactFlow 节点 ID。
@@ -141,4 +143,3 @@ TBD - created by archiving change add-topic-api-with-sse. Update Purpose after a
 - **AND** 必须保持所有测试继续通过
 - **AND** 必须移除重复代码和不再使用的本地创建逻辑
 - **AND** 必须确保API集成代码的单一职责原则
-
