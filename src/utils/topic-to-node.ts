@@ -62,6 +62,15 @@ export function topicToNode(
   // 生成节点标签
   const label = generateNodeLabel(topic.content, opts.maxLabelLength);
 
+  // 创建扩展的 metadata，包含坐标信息以便后续检测
+  const extendedMetadata = {
+    ...topic.metadata,
+    hasStoredCoordinates:
+      topic.position_x !== undefined && topic.position_y !== undefined,
+    position_x: topic.position_x,
+    position_y: topic.position_y,
+  };
+
   return {
     id: `topic-${topic.id}`,
     type: "custom",
@@ -76,7 +85,7 @@ export function topicToNode(
       user_name: topic.user_name,
       timestamp: topic.timestamp,
       tags: topic.tags,
-      metadata: topic.metadata,
+      metadata: extendedMetadata,
       onAddChild,
     } as TopicNodeData,
   };
@@ -186,16 +195,39 @@ function generateNodeLabel(content: string, maxLength: number): string {
 
 /**
  * 优化节点位置，避免重叠
+ * 只对没有坐标的节点进行位置优化，保持已有坐标节点的位置不变
  */
 function optimizeNodePositions(
   nodes: Node<TopicNodeData>[],
   childrenMap: Map<string, Topic[]>,
   options: Required<TopicToNodeOptions>,
 ): void {
-  // 按层级分组节点
-  const levelGroups = new Map<number, Node<TopicNodeData>[]>();
+  // 分离有坐标和无坐标的节点
+  const nodesWithCoordinates: Node<TopicNodeData>[] = [];
+  const nodesWithoutCoordinates: Node<TopicNodeData>[] = [];
 
   nodes.forEach((node) => {
+    // 检查节点是否有存储的坐标数据
+    const hasStoredCoordinates =
+      node.data.metadata?.hasStoredCoordinates === true;
+
+    // 如果有明确的坐标标记，或者坐标信息存在于 metadata 中
+    const hasCoordinates =
+      hasStoredCoordinates ||
+      (node.data.metadata?.position_x !== undefined &&
+        node.data.metadata?.position_y !== undefined);
+
+    if (hasCoordinates) {
+      nodesWithCoordinates.push(node);
+    } else {
+      nodesWithoutCoordinates.push(node);
+    }
+  });
+
+  // 按层级分组无坐标的节点
+  const levelGroups = new Map<number, Node<TopicNodeData>[]>();
+
+  nodesWithoutCoordinates.forEach((node) => {
     const level = node.data.level;
     if (!levelGroups.has(level)) {
       levelGroups.set(level, []);
@@ -203,7 +235,7 @@ function optimizeNodePositions(
     levelGroups.get(level)!.push(node);
   });
 
-  // 对每个层级的节点进行位置优化
+  // 对每个层级的无坐标节点进行位置优化
   levelGroups.forEach((levelNodes, level) => {
     const baseY = (options.levels[level]?.y || options.defaultPosition.y) + 100;
 
@@ -217,6 +249,43 @@ function optimizeNodePositions(
       };
     });
   });
+
+  // 可选：检测有坐标节点之间的重叠，并进行微调
+  adjustOverlappingNodes(nodesWithCoordinates, options);
+}
+
+/**
+ * 调整有坐标节点之间的重叠
+ */
+function adjustOverlappingNodes(
+  nodes: Node<TopicNodeData>[], // eslint-disable-line @typescript-eslint/no-unused-vars
+  _options: Required<TopicToNodeOptions>, // eslint-disable-line @typescript-eslint/no-unused-vars
+): void {
+  const minDistance = 50; // 最小节点间距
+
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const node1 = nodes[i];
+      const node2 = nodes[j];
+
+      const distance = Math.sqrt(
+        Math.pow(node1.position.x - node2.position.x, 2) +
+          Math.pow(node1.position.y - node2.position.y, 2),
+      );
+
+      // 如果节点距离太近，轻微调整第二个节点的位置
+      if (distance < minDistance) {
+        const angle = Math.atan2(
+          node2.position.y - node1.position.y,
+          node2.position.x - node1.position.x,
+        );
+
+        const adjustment = minDistance - distance;
+        node2.position.x += Math.cos(angle) * adjustment;
+        node2.position.y += Math.sin(angle) * adjustment;
+      }
+    }
+  }
 }
 
 /**
