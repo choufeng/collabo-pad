@@ -83,9 +83,17 @@ const TopicDetailsDisplay: React.FC<TopicDetailsDisplayProps> = ({
     try {
       if (user && channel) {
         console.log("执行API创建子主题逻辑");
+        // 过滤 parent_id 中的 'topic-' 前缀，确保 API 接收原始的 topic ID
+        const cleanParentId = selectedNodeId?.startsWith("topic-")
+          ? selectedNodeId.slice(6) // 移除 'topic-' 前缀
+          : selectedNodeId;
+
+        console.log("清理前的 parent_id:", selectedNodeId);
+        console.log("清理后的 parent_id:", cleanParentId);
+
         // 调用API创建子主题
         const requestData: CreateTopicRequest = {
-          parent_id: selectedNodeId,
+          parent_id: cleanParentId,
           channel_id: channel.id,
           content: childNodeContent.trim(),
           user_id: user.id,
