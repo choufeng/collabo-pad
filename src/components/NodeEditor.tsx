@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { SidebarMode, NodeData } from "./RightSidebar";
 import { createTopicAPI } from "@/lib/topicApi";
+import { removeTopicPrefix } from "@/utils/node-utils";
 import type { CreateTopicRequest } from "@/types/redis-stream";
 
 // 主题详情显示组件的 Props 接口

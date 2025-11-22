@@ -29,6 +29,9 @@ import {
   createParentChildEdge,
 } from "@/utils/node-hierarchy";
 import type { TopicNodeData } from "@/utils/topic-to-node";
+import { SideTrowser } from "./SideTrowser";
+import { useSideTrowserStore } from "@/stores/side-trowser-store";
+import { removeTopicPrefix } from "@/utils/node-utils";
 
 const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
@@ -72,6 +75,7 @@ function BoardWithProvider({
 
   // ReactFlow 实例，用于坐标转换
   const { getViewport, screenToFlowPosition } = useReactFlow();
+  const { open: openSideTrowser, updateForm } = useSideTrowserStore();
 
   // 同步外部数据变化到内部状态
   useEffect(() => {
@@ -80,7 +84,6 @@ function BoardWithProvider({
   }, [initialNodes, initialEdges, setNodes, setEdges]);
 
   // 侧边栏状态管理
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarMode, setSidebarMode] = useState<SidebarMode>(null);
   const [selectedNodeId, setSelectedNodeId] = useState<string>();
   const [connectionSource, setConnectionSource] = useState<string>();
@@ -96,180 +99,24 @@ function BoardWithProvider({
     y: number;
     canvasX: number;
     canvasY: number;
+    menuItems?: ContextMenuItem[];
   }>({
     visible: false,
     x: 0,
     y: 0,
     canvasX: 0,
     canvasY: 0,
+    menuItems: [],
   });
-
-  // 点击位置坐标（用于创建主题）
-  const [clickPosition, setClickPosition] = useState<{
-    x: number;
-    y: number;
-  } | null>(null);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
     [setEdges],
   );
 
-  // 打开侧边栏的通用函数
-  const openSidebar = useCallback(
-    (
-      mode: SidebarMode,
-      nodeId?: string,
-      sourceId?: string,
-      initialData?: NodeData,
-      parentData?: NodeData,
-      position?: { x: number; y: number },
-    ) => {
-      setSidebarMode(mode);
-      setSelectedNodeId(nodeId);
-      setConnectionSource(sourceId);
-      setInitialNodeData(initialData);
-      setParentNodeData(parentData);
-      setClickPosition(position || null);
-      setSidebarOpen(true);
-    },
-    [],
-  );
-
-  // 关闭侧边栏
-  const closeSidebar = useCallback(() => {
-    setSidebarOpen(false);
-    setSidebarMode(null);
-    setSelectedNodeId(undefined);
-    setConnectionSource(undefined);
-    setInitialNodeData(undefined);
-    setParentNodeData(undefined);
-    setClickPosition(null);
-  }, []);
-
-  // 创建节点（旧版本，现在改为打开侧边栏）
   const openCreateSidebar = useCallback(() => {
-    openSidebar("create");
-  }, [openSidebar]);
-
-  // 处理"+"按钮点击，打开子评论创建侧边栏
-  const handleAddChildNode = useCallback(
-    (parentNodeId: string) => {
-      const parentNode = nodes.find((node) => node.id === parentNodeId);
-      if (!parentNode) return;
-
-      // 获取父节点数据
-      const parentData: NodeData = {
-        content: parentNode.data.content as string,
-        parentId: parentNode.data.parentId as string | undefined,
-        level: parentNode.data.level as number | undefined,
-        childIds: parentNode.data.childIds as string[] | undefined,
-      };
-
-      // 打开子评论创建侧边栏
-      openSidebar("child-comment", undefined, undefined, undefined, parentData);
-    },
-    [nodes, openSidebar],
-  );
-
-  // 保存新节点
-  const handleSaveNode = useCallback(
-    (data: NodeData) => {
-      let newNode: Node;
-
-      if (sidebarMode === "child-comment" && parentNodeData) {
-        // 子评论模式：创建子节点
-        const parentNode = nodes.find(
-          (node) => node.data.content === parentNodeData.content,
-        );
-
-        if (!parentNode) {
-          console.error("父节点未找到");
-          return;
-        }
-
-        // 创建子节点数据
-        const childNodeData = createChildNodeData(
-          parentNode as ExtendedNode,
-          data.content,
-          nodes as ExtendedNode[],
-        );
-
-        newNode = {
-          id: `node-${nodeId}`,
-          type: "custom",
-          position: childNodeData.position,
-          data: {
-            ...childNodeData.data,
-            onAddChild: handleAddChildNode, // 传递回调函数
-          },
-        };
-
-        // 更新父子节点关系
-        const updatedNodes = updateParentChildRelation(
-          parentNode as ExtendedNode,
-          newNode as ExtendedNode,
-          nodes as ExtendedNode[],
-        );
-
-        setNodes(updatedNodes);
-
-        // 创建父子连接线
-        const parentChildEdge = createParentChildEdge(
-          parentNode as ExtendedNode,
-          newNode as ExtendedNode,
-          edges,
-        );
-        setEdges((eds) => eds.concat(parentChildEdge));
-      } else {
-        // 普通创建模式
-        newNode = {
-          id: `node-${nodeId}`,
-          type: "custom",
-          position: {
-            x: Math.random() * 400 + 100, // 稍微偏移避免重叠
-            y: Math.random() * 400 + 100,
-          },
-          data: {
-            label:
-              data.content.substring(0, 30) +
-              (data.content.length > 30 ? "..." : ""),
-            content: data.content,
-            level: 0, // 顶级节点
-            onAddChild: handleAddChildNode, // 传递回调函数
-          },
-        };
-
-        setNodes((nds) => nds.concat(newNode));
-
-        // 如果是连接模式，创建连接
-        if (sidebarMode === "connection" && connectionSource) {
-          const newEdge: Edge = {
-            id: `edge-${connectionSource}-${newNode.id}`,
-            source: connectionSource,
-            target: newNode.id,
-            type: "smoothstep",
-          };
-          setEdges((eds) => eds.concat(newEdge));
-        }
-      }
-
-      setNodeId((id) => id + 1);
-      closeSidebar();
-    },
-    [
-      nodeId,
-      nodes,
-      edges,
-      sidebarMode,
-      connectionSource,
-      parentNodeData,
-      setNodes,
-      setEdges,
-      closeSidebar,
-      handleAddChildNode,
-    ],
-  );
+    openSideTrowser();
+  }, [openSideTrowser]);
 
   // 更新节点
   const handleUpdateNode = useCallback(
@@ -290,67 +137,45 @@ function BoardWithProvider({
             : node,
         ),
       );
-      closeSidebar();
     },
-    [setNodes, closeSidebar],
-  );
-
-  // 创建子节点
-  const handleCreateChildNode = useCallback(
-    async (parentId: string, content: string) => {
-      const parentNode = nodes.find((node) => node.id === parentId);
-      if (!parentNode) {
-        throw new Error("Parent node not found");
-      }
-
-      // 创建子节点数据
-      const childNodeData = createChildNodeData(
-        parentNode as ExtendedNode,
-        content,
-        nodes as ExtendedNode[],
-        "currentUser", // 可以从用户上下文获取
-      );
-
-      const newNode: Node = {
-        id: `node-${nodeId}`,
-        type: "custom",
-        position: childNodeData.position,
-        data: {
-          ...childNodeData.data,
-          onAddChild: handleAddChildNode,
-        },
-      };
-
-      // 更新父子节点关系
-      const updatedNodes = updateParentChildRelation(
-        parentNode as ExtendedNode,
-        newNode as ExtendedNode,
-        nodes as ExtendedNode[],
-      );
-
-      // 创建连接线
-      const newEdge = createParentChildEdge(
-        parentNode as ExtendedNode,
-        newNode as ExtendedNode,
-        edges,
-      );
-
-      // 更新状态
-      setNodes(updatedNodes);
-      setEdges((eds) => [...eds, newEdge]);
-      setNodeId((id) => id + 1);
-    },
-    [nodes, handleAddChildNode, setNodes, setEdges],
+    [setNodes],
   );
 
   // 节点点击事件
   const onNodeClick = useCallback(
     (event: React.MouseEvent, node: Node) => {
-      openSidebar("edit", node.id, undefined, {
-        content: node.data.content as string,
+      const currentTopicId = removeTopicPrefix(node.id);
+      console.log("当前节点ID:", node.id, "Topic ID:", currentTopicId);
+      console.log(
+        "所有节点的parentId信息:",
+        nodes.map((n) => ({
+          nodeId: n.id,
+          topicId: removeTopicPrefix(n.id),
+          parentId: (n.data as TopicNodeData).parentId,
+          rawData: n.data,
+        })),
+      );
+
+      const childNodes = nodes.filter(
+        (n) => (n.data as TopicNodeData).parentId === currentTopicId,
+      );
+      console.log("节点点击 - 子节点数量:", childNodes.length);
+
+      // 计算新子节点位置
+      const childNodeData = createChildNodeData(
+        node as ExtendedNode,
+        "",
+        childNodes as ExtendedNode[],
+        user?.name,
+      );
+      updateForm({
+        parent_id: removeTopicPrefix(node.id),
+        x: childNodeData.position.x,
+        y: childNodeData.position.y,
       });
+      openSideTrowser();
     },
-    [openSidebar],
+    [nodes, openSideTrowser, updateForm, user],
   );
 
   // 连接开始事件
@@ -378,10 +203,9 @@ function BoardWithProvider({
         clientY > reactFlowBounds.bottom;
 
       if (isOutOfBounds && connectionSource) {
-        openSidebar("connection", undefined, connectionSource);
       }
     },
-    [connectionSource, openSidebar],
+    [connectionSource],
   );
 
   // 右键事件处理函数
@@ -406,41 +230,33 @@ function BoardWithProvider({
           id: "add-topic",
           label: "Add Topic",
           onClick: () => {
-            // 打开位置上下文模式的侧边栏，传递画布坐标
-            openSidebar(
-              "position-context",
-              undefined,
-              undefined,
-              undefined,
-              undefined,
+            console.log(
+              "添加主题，位置（画布坐标）at menuItem:",
               canvasPosition,
             );
+            updateForm({
+              parent_id: undefined,
+              x: canvasPosition.x,
+              y: canvasPosition.y,
+            });
+            openSideTrowser();
           },
         },
       ];
 
-      // 可以根据是否点击在节点上添加不同的菜单项
-      if (isNode) {
-        menuItems.push({
-          id: "add-child-topic",
-          label: "Add Child Topic",
-          onClick: () => {
-            // 可以在这里实现添加子主题的逻辑
-            console.log("添加子主题功能待实现");
-          },
+      // 显示右键菜单
+      if (!isNode) {
+        setContextMenu({
+          visible: true,
+          x: clickX,
+          y: clickY,
+          canvasX: canvasPosition.x,
+          canvasY: canvasPosition.y,
+          menuItems,
         });
       }
-
-      // 显示右键菜单
-      setContextMenu({
-        visible: true,
-        x: clickX,
-        y: clickY,
-        canvasX: canvasPosition.x,
-        canvasY: canvasPosition.y,
-      });
     },
-    [openSidebar, screenToFlowPosition],
+    [screenToFlowPosition],
   );
 
   // 关闭右键菜单的函数
@@ -524,52 +340,14 @@ function BoardWithProvider({
         <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
       </ReactFlow>
 
-      <button
-        type="button"
-        onClick={openCreateSidebar}
-        tabIndex={0}
-        className="absolute top-4 right-4 z-10 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg shadow-lg transition-colors duration-200"
-      >
-        Add Topic
-      </button>
-
-      <RightSidebar
-        isOpen={sidebarOpen}
-        mode={sidebarMode}
-        selectedNodeId={selectedNodeId}
-        sourceNodeId={connectionSource}
-        initialData={initialNodeData}
-        parentNodeData={parentNodeData}
-        clickPosition={clickPosition}
-        onClose={closeSidebar}
-        onSaveNode={handleSaveNode}
-        onUpdateNode={handleUpdateNode}
-        onCreateChildNode={handleCreateChildNode}
-        user={user}
-        channel={channel}
-      />
+      <SideTrowser />
 
       {/* 右键上下文菜单 */}
       <ContextMenu
         visible={contextMenu.visible}
         x={contextMenu.x}
         y={contextMenu.y}
-        items={[
-          {
-            id: "add-topic",
-            label: "Add Topic",
-            onClick: () => {
-              openSidebar(
-                "position-context",
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                { x: contextMenu.canvasX, y: contextMenu.canvasY },
-              );
-            },
-          },
-        ]}
+        items={contextMenu.menuItems || []}
         onClose={closeContextMenu}
       />
     </div>

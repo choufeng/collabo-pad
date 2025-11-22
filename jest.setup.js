@@ -1,6 +1,10 @@
 require("@testing-library/jest-dom");
 require("@testing-library/user-event");
 
+// Fix for React 19 act compatibility issue
+const { act } = require("react");
+global.ReactAct = act;
+
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
   constructor() {}

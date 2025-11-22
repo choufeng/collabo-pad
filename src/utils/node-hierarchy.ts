@@ -194,16 +194,42 @@ export function createChildNodeData(
   const parentLevel = parentNode.data.level || 0;
   const childLevel = parentLevel + 1;
 
-  // 计算子节点位置（相对于父节点偏移）
-  const existingChildren = getChildNodes(parentNode.id, nodes);
-  const xOffset = 200; // 水平偏移
-  const yOffset = existingChildren.length * 80; // 垂直偏移，每个子节点间隔80px
+  // 计算子节点位置（基于节点实际尺寸）
+  // 注意：parentNode.id 带有 "topic-" 前缀，但 parentId 存储的是原始的 topic ID
+  const parentTopicId =
+    (parentNode.data as any).topicId || parentNode.id.replace("topic-", "");
+  const existingChildren = nodes.filter(
+    (node) => (node.data as any).parentId === parentTopicId,
+  );
+  const horizontalOffset = 50; // 节点间的水平间距
+  const verticalOffset = 30; // 节点间的垂直间距
+
+  let childX: number;
+  let childY: number;
+
+  if (existingChildren.length === 0) {
+    // 没有子节点时：Y与父节点一致，X = 父节点X + 父节点宽度 + 偏移量
+    const parentWidth = parentNode.measured?.width || 200; // 默认宽度200px
+    childX = parentNode.position.x + parentWidth + horizontalOffset;
+    childY = parentNode.position.y;
+  } else {
+    // 有子节点时：找到最下方的子节点，基于它计算新位置
+    const maxYChild = existingChildren.reduce((maxChild, currentChild) => {
+      return currentChild.position.y > maxChild.position.y
+        ? currentChild
+        : maxChild;
+    });
+
+    const maxYChildHeight = maxYChild.measured?.height || 100; // 默认高度100px
+    childX = maxYChild.position.x; // X与最下方子节点对齐
+    childY = maxYChild.position.y + maxYChildHeight + verticalOffset;
+  }
 
   return {
     type: "default",
     position: {
-      x: parentNode.position.x + xOffset,
-      y: parentNode.position.y + yOffset,
+      x: childX,
+      y: childY,
     },
     data: {
       label: content.substring(0, 30) + (content.length > 30 ? "..." : ""),
