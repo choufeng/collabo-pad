@@ -16,11 +16,11 @@ export const topics = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
 
     // Relationships
-    channelId: uuid("channel_id").notNull(),
+    channelId: text("channel_id").notNull(),
     parentId: uuid("parent_id"),
 
     // User information
-    userId: uuid("user_id").notNull(),
+    userId: text("user_id").notNull(),
     username: text("username").notNull(),
 
     // Content

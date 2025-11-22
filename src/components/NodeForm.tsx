@@ -23,7 +23,7 @@ const NodeForm: React.FC<NodeFormProps> = ({
   className = "",
 }) => {
   const params = useParams();
-  const channelId = params["channel-id"] as string;
+  const channelId = params?.["channel-id"] as string;
 
   const {
     form,

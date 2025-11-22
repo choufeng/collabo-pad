@@ -8,6 +8,13 @@
       "when": 1763840827453,
       "tag": "0000_bright_whirlwind",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1763845994156,
+      "tag": "0001_giant_warlock",
+      "breakpoints": true
     }
   ]
 }

@@ -461,7 +461,7 @@ export class DatabaseTestUtils {
       this.recordMetric("health_check", Date.now() - startTime);
 
       return {
-        healthy,
+        healthy: healthy as boolean,
         timestamp: new Date(),
         lastCheck: new Date(),
       };

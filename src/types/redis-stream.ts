@@ -101,6 +101,10 @@ export interface Topic {
   position_x?: number;
   /** 画布上的 y 坐标位置（像素） */
   position_y?: number;
+  /** 画布上的宽度（像素） */
+  position_w?: number;
+  /** 画布上的高度（像素） */
+  position_h?: number;
 }
 
 export interface CreateTopicRequest {
@@ -115,6 +119,10 @@ export interface CreateTopicRequest {
   x?: number;
   /** 画布上的 y 坐标位置（像素） */
   y?: number;
+  /** 画布上的宽度（像素） */
+  w?: number;
+  /** 画布上的高度（像素） */
+  h?: number;
 }
 
 export interface CreateTopicResponse {

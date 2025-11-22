@@ -219,10 +219,13 @@ export function createDatabaseError(
  * Check if an error code represents a transient error that might be resolved by retrying
  */
 export function isTransientError(code: ErrorCode): boolean {
-  const transientCodes = [
+  // Use type assertion to avoid strict type checking issues
+  const transientCodes: ErrorCode[] = [
     ERROR_CODES.CONNECTION_ERROR,
     ERROR_CODES.TIMEOUT_ERROR,
     ERROR_CODES.INTERNAL_ERROR,
+    ERROR_CODES.QUERY_ERROR,
+    ERROR_CODES.SYNTAX_ERROR,
   ];
 
   return transientCodes.includes(code);

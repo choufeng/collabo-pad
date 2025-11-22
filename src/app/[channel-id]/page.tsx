@@ -16,7 +16,7 @@ import { topicsToFlowElements } from "@/utils/topic-to-node";
 export default function BoardPage() {
   const params = useParams();
   const router = useRouter();
-  const channelId = params["channel-id"] as string;
+  const channelId = params?.["channel-id"] as string;
 
   const { currentUser, loadCurrentUser } = useUserStore();
 

@@ -2,7 +2,14 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
 // Create a singleton postgres client
-const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+let connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+
+// Remove schema parameter if present (not supported by postgres-js)
+if (connectionString?.includes("schema=")) {
+  connectionString = connectionString
+    .replace(/\?schema=[^&]*&?/, "?")
+    .replace(/\?$/, "");
+}
 
 if (!connectionString) {
   throw new Error(

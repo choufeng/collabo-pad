@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import redisService from "@/lib/redis";
+import { topicService } from "@/services/TopicService";
 import type {
   CreateTopicRequest,
   CreateTopicResponse,
@@ -19,6 +19,8 @@ export async function POST(request: NextRequest) {
       tags,
       x,
       y,
+      w,
+      h,
     } = body as CreateTopicRequest;
 
     // 基本参数验证
@@ -149,6 +151,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 尺寸参数验证（如果提供）
+    if (w !== undefined && (typeof w !== "number" || isNaN(w) || w <= 0)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "宽度必须是正数",
+          error: "INVALID_WIDTH",
+          topic: {} as any,
+          messageId: "",
+        } as CreateTopicResponse,
+        { status: 400 },
+      );
+    }
+
+    if (h !== undefined && (typeof h !== "number" || isNaN(h) || h <= 0)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "高度必须是正数",
+          error: "INVALID_HEIGHT",
+          topic: {} as any,
+          messageId: "",
+        } as CreateTopicResponse,
+        { status: 400 },
+      );
+    }
+
     // 内容安全检查 - 过滤潜在的恶意内容
     const sanitizedContent = content
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
@@ -169,26 +198,69 @@ export async function POST(request: NextRequest) {
         : undefined,
       x: x !== undefined ? Math.round(x) : undefined,
       y: y !== undefined ? Math.round(y) : undefined,
+      w: w !== undefined ? Math.round(w) : undefined,
+      h: h !== undefined ? Math.round(h) : undefined,
     };
 
-    // 确保Redis连接
-    await redisService.connect();
+    // 使用TopicService创建主题
+    try {
+      const topic = await topicService.create({
+        channelId: createRequest.channel_id,
+        userId: createRequest.user_id,
+        username: createRequest.user_name,
+        content: createRequest.content,
+        parentId:
+          createRequest.parent_id && createRequest.parent_id.trim()
+            ? createRequest.parent_id.trim()
+            : null,
+        x: createRequest.x !== undefined ? createRequest.x.toString() : null,
+        y: createRequest.y !== undefined ? createRequest.y.toString() : null,
+        w: createRequest.w !== undefined ? createRequest.w.toString() : null,
+        h: createRequest.h !== undefined ? createRequest.h.toString() : null,
+        metadata: createRequest.metadata || null,
+        tags: createRequest.tags || null,
+      });
 
-    // 创建主题
-    const result = await redisService.createTopic(createRequest);
+      // 转换为前端兼容的格式
+      const responseTopic = {
+        id: topic.id,
+        parent_id: topic.parentId || undefined,
+        channel_id: topic.channelId,
+        content: topic.content,
+        user_id: topic.userId,
+        user_name: topic.username,
+        timestamp: topic.createdAt?.getTime() || Date.now(),
+        metadata: topic.metadata || undefined,
+        tags: topic.tags || undefined,
+        status: "active" as const,
+        position_x: topic.x ? Number(topic.x) : undefined,
+        position_y: topic.y ? Number(topic.y) : undefined,
+        position_w: topic.w ? Number(topic.w) : undefined,
+        position_h: topic.h ? Number(topic.h) : undefined,
+      };
 
-    if (!result.success) {
+      // 返回成功响应
+      const result: CreateTopicResponse = {
+        success: true,
+        message: "主题创建成功",
+        topic: responseTopic,
+        messageId: topic.id, // 使用UUID作为消息ID
+      };
+
+      return NextResponse.json(result, { status: 201 });
+    } catch (createError) {
+      console.error("创建主题失败:", createError);
       return NextResponse.json(
         {
-          ...result,
+          success: false,
+          message: `创建主题失败: ${createError instanceof Error ? createError.message : "未知错误"}`,
+          topic: {} as any,
+          messageId: "",
           error: "CREATE_TOPIC_FAILED",
         } as CreateTopicResponse,
         { status: 500 },
       );
     }
-
-    // 返回成功响应
-    return NextResponse.json(result, { status: 201 });
   } catch (error) {
     console.error("创建主题API错误:", error);
 

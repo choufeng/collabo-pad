@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import redisService from "@/lib/redis";
+import { topicService } from "@/services/TopicService";
 import type { Topic, SSEMessage } from "@/types/redis-stream";
 
 export async function GET(
@@ -16,9 +16,6 @@ export async function GET(
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        // 确保Redis连接
-        await redisService.connect();
-
         const encoder = new TextEncoder();
         let isAlive = true;
         let lastTimestamp = Date.now();
@@ -49,15 +46,13 @@ export async function GET(
 
         // 发送历史数据
         try {
-          const { topics } = await redisService.getChannelTopics(
-            channelId,
-            "-",
-            "+",
-            50,
-          );
+          const topics = await topicService.findByChannelId(channelId);
 
           // 按时间倒序发送历史数据
-          const sortedTopics = topics.sort((a, b) => b.timestamp - a.timestamp);
+          const sortedTopics = topics.sort(
+            (a, b) =>
+              (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0),
+          );
 
           sendSSEMessage(
             "history_data",
@@ -70,7 +65,7 @@ export async function GET(
 
           // 更新最后时间戳为最新主题的时间
           if (sortedTopics.length > 0) {
-            lastTimestamp = sortedTopics[0].timestamp;
+            lastTimestamp = sortedTopics[0].createdAt?.getTime() || Date.now();
           }
         } catch (error) {
           console.error("获取历史数据失败:", error);
@@ -89,15 +84,20 @@ export async function GET(
           if (!isAlive) return;
 
           try {
-            const newTopics = await redisService.getNewTopics(
-              channelId,
-              lastTimestamp,
-              10,
+            // 简单的轮询机制检查新主题
+            // TODO: 实现PostgreSQL LISTEN/NOTIFY机制
+            const currentTopics = await topicService.findByChannelId(channelId);
+            const newTopics = currentTopics.filter(
+              (topic) =>
+                topic.createdAt && topic.createdAt.getTime() > lastTimestamp,
             );
 
             if (newTopics.length > 0) {
               // 按时间顺序处理新主题
-              newTopics.sort((a, b) => a.timestamp - b.timestamp);
+              newTopics.sort(
+                (a, b) =>
+                  (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0),
+              );
 
               for (const topic of newTopics) {
                 sendSSEMessage(
@@ -107,8 +107,9 @@ export async function GET(
                 );
 
                 // 更新最后时间戳
-                if (topic.timestamp > lastTimestamp) {
-                  lastTimestamp = topic.timestamp;
+                const topicTime = topic.createdAt?.getTime() || 0;
+                if (topicTime > lastTimestamp) {
+                  lastTimestamp = topicTime;
                 }
               }
             }

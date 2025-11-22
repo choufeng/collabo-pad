@@ -1,5 +1,6 @@
 import { db } from "../database/drizzle";
-import { topics, eq, and, isNull, not, desc } from "../database/schema";
+import { topics } from "../database/schema";
+import { eq, and, isNull, not, desc } from "drizzle-orm";
 import type { NewTopic, Topic } from "../database/schema";
 
 export interface TopicHierarchyNode extends Topic {
@@ -11,22 +12,22 @@ export interface CreateTopicData extends Partial<NewTopic> {
   userId: string;
   username: string;
   content: string;
-  x?: string;
-  y?: string;
-  w?: string;
-  h?: string;
-  metadata?: Record<string, any>;
-  tags?: string[];
+  x?: string | null;
+  y?: string | null;
+  w?: string | null;
+  h?: string | null;
+  metadata?: Record<string, any> | null;
+  tags?: string[] | null;
 }
 
 export interface UpdateTopicData extends Partial<Topic> {
   content?: string;
-  x?: string;
-  y?: string;
-  w?: string;
-  h?: string;
-  metadata?: Record<string, any>;
-  tags?: string[];
+  x?: string | null;
+  y?: string | null;
+  w?: string | null;
+  h?: string | null;
+  metadata?: Record<string, any> | null;
+  tags?: string[] | null;
 }
 
 /**
