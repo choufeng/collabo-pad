@@ -1,8 +1,9 @@
 import { useSideTrowserStore } from "../stores/side-trowser-store";
 import NodeForm from "./NodeForm";
+import NodeContentView from "./NodeContentView";
 
 export const SideTrowser = () => {
-  const { isOpen, close, form, reset } = useSideTrowserStore();
+  const { isOpen, close, form, reset, selectedNode } = useSideTrowserStore();
 
   // 如果关闭状态则不渲染
   if (!isOpen) {
@@ -37,12 +38,25 @@ export const SideTrowser = () => {
 
       {/* 内容区域 */}
       <div className="flex-1 overflow-y-auto p-4">
-        <p className="text-gray-600">SideTrowser内容区域</p>
-        {/* 这里可以放置侧边栏的具体内容 */}
-        {JSON.stringify({ form })}
+        {/* 节点内容显示区域 */}
+        <div id="node-content-area" className="mt-4">
+          <NodeContentView selectedNode={selectedNode} />
+        </div>
 
-        <hr />
-        <div className="text-sm text-gray-500 mt-4">
+        <hr className="my-6" />
+
+        {/* 创建新节点表单 */}
+        <div className="text-sm text-gray-500">
+          <div className="mb-4">
+            <h3 className="text-base font-medium text-gray-900 mb-2">
+              创建新节点
+            </h3>
+            <p className="text-xs text-gray-500">
+              {selectedNode
+                ? `为节点 "${(selectedNode.data as any)?.label || "选中节点"}" 创建子节点`
+                : "创建顶级节点"}
+            </p>
+          </div>
           <NodeForm
             onSubmitSuccess={() => {
               reset();

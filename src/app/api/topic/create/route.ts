@@ -4,6 +4,8 @@ import type {
   CreateTopicRequest,
   CreateTopicResponse,
 } from "@/types/redis-stream";
+import { aiService } from "@/lib/ai-service";
+import { systemPrompt } from "@/utils/translate-prompts";
 
 export async function POST(request: NextRequest) {
   try {
@@ -185,11 +187,33 @@ export async function POST(request: NextRequest) {
       .replace(/javascript:/gi, "")
       .replace(/on\w+\s*=/gi, "");
 
+    // 确保 AI 服务已初始化
+    if (!aiService.isServiceInitialized()) {
+      await aiService.initialize({
+        DATABASE_URL: process.env.DATABASE_URL!,
+        OPENAI_API_KEY: process.env.OPENAI_API_KEY!,
+        OPENAI_BASE_URL: process.env.OPENAI_BASE_URL!,
+        OPENAI_MODEL: process.env.OPENAI_MODEL!,
+      });
+    }
+
+    // 直接调用服务
+    const translatedContent = await aiService.sendMessage(
+      sanitizedContent.trim(),
+      {
+        systemPrompt,
+      },
+    );
+
+    // 获取翻译后的内容，如果翻译失败则使用原始内容
+    const finalTranslatedContent =
+      translatedContent.data?.response?.trim() || sanitizedContent.trim();
+
     // 构建创建主题请求
     const createRequest: CreateTopicRequest = {
       parent_id: parent_id?.trim() || undefined,
       channel_id: channel_id.trim(),
-      content: sanitizedContent.trim(),
+      content: sanitizedContent.trim(), // 存储原始内容
       user_id: user_id.trim(),
       user_name: user_name.trim(),
       metadata: metadata ? JSON.parse(JSON.stringify(metadata)) : undefined,
@@ -209,6 +233,7 @@ export async function POST(request: NextRequest) {
         userId: createRequest.user_id,
         username: createRequest.user_name,
         content: createRequest.content,
+        translatedContent: finalTranslatedContent,
         parentId:
           createRequest.parent_id && createRequest.parent_id.trim()
             ? createRequest.parent_id.trim()
@@ -227,6 +252,7 @@ export async function POST(request: NextRequest) {
         parent_id: topic.parentId || undefined,
         channel_id: topic.channelId,
         content: topic.content,
+        translated_content: topic.translatedContent || undefined,
         user_id: topic.userId,
         user_name: topic.username,
         timestamp: topic.createdAt?.getTime() || Date.now(),

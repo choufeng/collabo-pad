@@ -75,7 +75,11 @@ function BoardWithProvider({
 
   // ReactFlow 实例，用于坐标转换
   const { getViewport, screenToFlowPosition } = useReactFlow();
-  const { open: openSideTrowser, updateForm } = useSideTrowserStore();
+  const {
+    open: openSideTrowser,
+    updateForm,
+    setSelectedNode,
+  } = useSideTrowserStore();
 
   // 同步外部数据变化到内部状态
   useEffect(() => {
@@ -161,6 +165,14 @@ function BoardWithProvider({
       );
       console.log("节点点击 - 子节点数量:", childNodes.length);
 
+      // 设置选中的节点信息到 store
+      setSelectedNode({
+        id: node.id,
+        type: node.type || "custom",
+        data: node.data,
+        position: node.position,
+      });
+
       // 计算新子节点位置
       const childNodeData = createChildNodeData(
         node as ExtendedNode,
@@ -175,7 +187,7 @@ function BoardWithProvider({
       });
       openSideTrowser();
     },
-    [nodes, openSideTrowser, updateForm, user],
+    [nodes, openSideTrowser, updateForm, setSelectedNode, user],
   );
 
   // 连接开始事件

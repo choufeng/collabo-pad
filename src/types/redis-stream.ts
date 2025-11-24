@@ -91,6 +91,7 @@ export interface Topic {
   parent_id?: string;
   channel_id: string;
   content: string;
+  translated_content?: string;
   user_id: string;
   user_name: string;
   timestamp: number;

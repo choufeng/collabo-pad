@@ -1,10 +1,4 @@
-# ai-integration Specification
-
-## Purpose
-
-TBD - created by archiving change add-langchain-integration. Update Purpose after archive.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: LangChain 基础集成
 

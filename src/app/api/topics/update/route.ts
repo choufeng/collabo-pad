@@ -5,6 +5,7 @@ import type { Topic } from "@/types/redis-stream";
 export interface UpdateTopicRequest {
   id: string;
   content?: string;
+  translated_content?: string;
   x?: number;
   y?: number;
   w?: number;
@@ -24,7 +25,7 @@ export async function PUT(request: NextRequest) {
   try {
     // 解析请求体
     const body = await request.json();
-    const { id, content, x, y, w, h, metadata, tags } =
+    const { id, content, translated_content, x, y, w, h, metadata, tags } =
       body as UpdateTopicRequest;
 
     // 基本参数验证
@@ -162,6 +163,10 @@ export async function PUT(request: NextRequest) {
       updateData.content = sanitizedContent.trim();
     }
 
+    if (translated_content !== undefined) {
+      updateData.translatedContent = translated_content.trim();
+    }
+
     if (x !== undefined) {
       updateData.x = x.toString();
     }
@@ -218,6 +223,7 @@ export async function PUT(request: NextRequest) {
       parent_id: updatedTopic.parentId || undefined,
       channel_id: updatedTopic.channelId,
       content: updatedTopic.content,
+      translated_content: updatedTopic.translatedContent || undefined,
       user_id: updatedTopic.userId,
       user_name: updatedTopic.username,
       timestamp: updatedTopic.updatedAt?.getTime() || Date.now(), // 使用更新时间

@@ -10,6 +10,7 @@ import { ExtendedNode } from "./node-hierarchy";
 export interface TopicNodeData extends Record<string, unknown> {
   label: string;
   content: string;
+  translated_content?: string;
   level: number;
   parentId?: string;
   childIds?: string[];
@@ -78,6 +79,7 @@ export function topicToNode(
     data: {
       label,
       content: topic.content,
+      translated_content: topic.translated_content,
       level,
       parentId: topic.parent_id,
       topicId: topic.id,

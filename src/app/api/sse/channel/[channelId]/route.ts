@@ -57,7 +57,10 @@ export async function GET(
           sendSSEMessage(
             "history_data",
             {
-              topics: sortedTopics,
+              topics: sortedTopics.map((topic) => ({
+                ...topic,
+                translated_content: topic.translatedContent || undefined,
+              })),
               total: topics.length,
             },
             `已加载 ${topics.length} 个历史主题`,
@@ -102,7 +105,10 @@ export async function GET(
               for (const topic of newTopics) {
                 sendSSEMessage(
                   "topic_created",
-                  topic,
+                  {
+                    ...topic,
+                    translated_content: topic.translatedContent || undefined,
+                  },
                   `新主题: ${topic.content.substring(0, 50)}...`,
                 );
 

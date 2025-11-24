@@ -42,6 +42,7 @@ export async function GET(
       parent_id: topic.parentId || undefined,
       channel_id: topic.channelId,
       content: topic.content,
+      translated_content: topic.translatedContent || undefined,
       user_id: topic.userId,
       user_name: topic.username,
       timestamp: topic.createdAt?.getTime() || Date.now(),

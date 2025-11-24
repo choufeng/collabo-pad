@@ -25,6 +25,7 @@ export const topics = pgTable(
 
     // Content
     content: text("content").notNull(),
+    translatedContent: text("translated_content"),
 
     // Spatial positioning for canvas
     x: decimal("x", { precision: 10, scale: 2 }),

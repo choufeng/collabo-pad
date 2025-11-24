@@ -12,6 +12,7 @@ export interface CreateTopicData extends Partial<NewTopic> {
   userId: string;
   username: string;
   content: string;
+  translatedContent?: string | null;
   x?: string | null;
   y?: string | null;
   w?: string | null;
@@ -22,6 +23,7 @@ export interface CreateTopicData extends Partial<NewTopic> {
 
 export interface UpdateTopicData extends Partial<Topic> {
   content?: string;
+  translatedContent?: string | null;
   x?: string | null;
   y?: string | null;
   w?: string | null;
