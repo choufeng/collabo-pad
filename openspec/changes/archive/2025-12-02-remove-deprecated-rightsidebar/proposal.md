@@ -59,6 +59,7 @@
 ## What Changes
 
 ### 文件删除
+
 - **组件文件**: 删除 `src/components/RightSidebar.tsx` (744 行)
 - **组件文件**: 删除 `src/components/NodeEditor.tsx` (745 行) - 额外清理的废弃组件
 - **测试文件**: 删除 `__tests__/components/RightSidebar.test.tsx`
@@ -67,9 +68,11 @@
 - **测试文件**: 删除 `__tests__/components/NodeEditorAPISimple.test.tsx`
 
 ### 文件新增
+
 - **类型文件**: 创建 `src/types/node.ts` (26 行) - 集中管理节点相关类型
 
 ### 类型迁移
+
 - 将 `SidebarMode` 和 `NodeData` 类型从组件迁移到专门的类型文件
 - 更新 6 个文件的导入路径：
   - `src/components/Board.tsx`
@@ -78,6 +81,7 @@
   - 以及其他测试文件
 
 ### 总计清理
+
 - **删除**: 6 个文件，约 2000+ 行代码
 - **新增**: 1 个文件，26 行代码
 - **更新**: 6 个文件的导入语句

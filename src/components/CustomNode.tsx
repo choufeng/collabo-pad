@@ -12,7 +12,6 @@ interface CustomNodeProps extends NodeProps {
       parentId?: string;
       level?: number;
       childIds?: string[];
-      creator?: string;
     };
 }
 
@@ -116,10 +115,13 @@ const CustomNode: React.FC<CustomNodeProps> = memo(({ id, data, selected }) => {
         </div>
       )}
 
-      {/* 创建者信息显示（开发模式） */}
-      {process.env.NODE_ENV === "development" && data.creator && (
-        <div className="absolute -top-2 -left-2 bg-purple-600 text-white text-xs px-2 py-1 rounded max-w-20 truncate">
-          {data.creator}
+      {/* 创建者信息显示 */}
+      {data.user_name && (
+        <div
+          className="absolute -top-4 left-2 bg-gray-800/90 text-white text-xs px-2 py-1 rounded max-w-20 truncate hover:max-w-none hover:bg-gray-900 transition-all duration-200 group"
+          title={`${data.user_name}`}
+        >
+          {data.user_name}
         </div>
       )}
     </div>

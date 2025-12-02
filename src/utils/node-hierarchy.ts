@@ -11,7 +11,6 @@ export interface ExtendedNodeData extends NodeData {
   parentId?: string; // 父节点ID
   level?: number; // 节点层级，0为顶级节点
   childIds?: string[]; // 子节点ID列表
-  creator?: string; // 节点创建者用户名
 }
 
 // 扩展节点类型
@@ -23,7 +22,6 @@ export interface ExtendedNode extends Node {
       parentId?: string;
       level?: number;
       childIds?: string[];
-      creator?: string;
     };
 }
 
