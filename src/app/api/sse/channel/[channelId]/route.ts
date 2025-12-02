@@ -19,6 +19,10 @@ export async function GET(
         const encoder = new TextEncoder();
         let isAlive = true;
         let lastTimestamp = Date.now();
+        let lastTopicStates = new Map<
+          string,
+          { createdAt: number; updatedAt: number }
+        >();
 
         // 发送连接确认消息
         const sendSSEMessage = (
@@ -82,6 +86,16 @@ export async function GET(
           if (sortedTopics.length > 0) {
             lastTimestamp = sortedTopics[0].createdAt?.getTime() || Date.now();
           }
+
+          // 初始化主题状态跟踪
+          lastTopicStates.clear();
+          for (const topic of sortedTopics) {
+            lastTopicStates.set(topic.id, {
+              createdAt: topic.createdAt?.getTime() || 0,
+              updatedAt:
+                topic.updatedAt?.getTime() || topic.createdAt?.getTime() || 0,
+            });
+          }
         } catch (error) {
           console.error("获取历史数据失败:", error);
           sendSSEMessage("error", null, "获取历史数据失败");
@@ -99,14 +113,17 @@ export async function GET(
           if (!isAlive) return;
 
           try {
-            // 简单的轮询机制检查新主题
+            // 轮询机制检查新主题和更新主题
             // TODO: 实现PostgreSQL LISTEN/NOTIFY机制
             const currentTopics = await topicService.findByChannelId(channelId);
+
+            // 检测新主题
             const newTopics = currentTopics.filter(
               (topic) =>
                 topic.createdAt && topic.createdAt.getTime() > lastTimestamp,
             );
 
+            // 处理新主题
             if (newTopics.length > 0) {
               // 按时间顺序处理新主题
               newTopics.sort(
@@ -143,9 +160,70 @@ export async function GET(
                 }
               }
             }
+
+            // 检测更新的主题
+            const updatedTopics: Array<(typeof currentTopics)[0]> = [];
+            for (const topic of currentTopics) {
+              const currentCreatedAt = topic.createdAt?.getTime() || 0;
+              const currentUpdatedAt =
+                topic.updatedAt?.getTime() || currentCreatedAt;
+              const lastState = lastTopicStates.get(topic.id);
+
+              if (lastState) {
+                // 如果已存在的主题，检查是否有更新
+                if (currentUpdatedAt > lastState.updatedAt) {
+                  updatedTopics.push(topic);
+                }
+              }
+            }
+
+            // 处理更新的主题
+            if (updatedTopics.length > 0) {
+              // 按更新时间顺序处理
+              updatedTopics.sort(
+                (a, b) =>
+                  (a.updatedAt?.getTime() || a.createdAt?.getTime() || 0) -
+                  (b.updatedAt?.getTime() || b.createdAt?.getTime() || 0),
+              );
+
+              for (const topic of updatedTopics) {
+                sendSSEMessage(
+                  "topic_updated",
+                  {
+                    id: topic.id,
+                    parent_id: topic.parentId,
+                    channel_id: topic.channelId,
+                    content: topic.content,
+                    translated_content: topic.translatedContent || undefined,
+                    user_id: topic.userId,
+                    user_name: topic.username,
+                    timestamp:
+                      topic.updatedAt?.getTime() ||
+                      topic.createdAt?.getTime() ||
+                      Date.now(),
+                    metadata: topic.metadata,
+                    tags: topic.tags,
+                    x: topic.x ? parseFloat(topic.x.toString()) : undefined,
+                    y: topic.y ? parseFloat(topic.y.toString()) : undefined,
+                    w: topic.w ? parseFloat(topic.w.toString()) : undefined,
+                    h: topic.h ? parseFloat(topic.h.toString()) : undefined,
+                  },
+                  `更新主题: ${topic.content.substring(0, 50)}...`,
+                );
+              }
+            }
+
+            // 更新主题状态跟踪
+            for (const topic of currentTopics) {
+              lastTopicStates.set(topic.id, {
+                createdAt: topic.createdAt?.getTime() || 0,
+                updatedAt:
+                  topic.updatedAt?.getTime() || topic.createdAt?.getTime() || 0,
+              });
+            }
           } catch (error) {
-            console.error("检查新主题时出错:", error);
-            sendSSEMessage("error", null, "检查新主题失败");
+            console.error("检查主题变更时出错:", error);
+            sendSSEMessage("error", null, "检查主题变更失败");
           }
 
           // 继续检查

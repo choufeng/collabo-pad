@@ -148,7 +148,13 @@ export interface ChannelTopicsResponse {
 
 // SSE 相关类型定义
 export interface SSEMessage {
-  type: "connection" | "heartbeat" | "topic_created" | "error" | "history_data";
+  type:
+    | "connection"
+    | "heartbeat"
+    | "topic_created"
+    | "topic_updated"
+    | "error"
+    | "history_data";
   data?: any;
   message?: string;
   timestamp: number;

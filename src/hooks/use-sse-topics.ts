@@ -73,6 +73,18 @@ export function useSSETopics({
             });
           }
           break;
+        case "topic_updated":
+          if (sseMessage.data) {
+            setTopics((prev) => {
+              // 更新现有主题，而不是添加新主题
+              return prev.map((topic) =>
+                topic.id === sseMessage.data.id
+                  ? { ...sseMessage.data }
+                  : topic,
+              );
+            });
+          }
+          break;
         case "history_data":
           if (sseMessage.data?.topics) {
             setTopics(sseMessage.data.topics);
