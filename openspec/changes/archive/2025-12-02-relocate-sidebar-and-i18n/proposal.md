@@ -26,6 +26,7 @@ The sidebar **SHALL** be relocated from the left side to the right side of the s
 All Chinese user interface text **SHALL** be replaced with English equivalents.
 
 **SideTrowser Component**:
+
 - "侧边栏" **SHALL** become "Sidebar"
 - "关闭侧边栏" **SHALL** become "Close sidebar"
 - "创建新节点" **SHALL** become "Create New Node"
@@ -33,11 +34,13 @@ All Chinese user interface text **SHALL** be replaced with English equivalents.
 - "创建顶级节点" **SHALL** become "Create top-level node"
 
 **NodeContentView Component**:
+
 - "翻译内容" **SHALL** become "Translated Content"
 - "此节点暂无内容" **SHALL** become "This node has no content"
 - "标签" **SHALL** become "Tags"
 
 **NodeForm Component**:
+
 - Console log messages **SHALL** use English
 
 ## Impact Assessment

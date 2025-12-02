@@ -51,7 +51,9 @@
 - [x] Update any relevant component documentation
 - [x] Verify TypeScript types are still correct
 - [x] Remove any debugging console.log if not needed
+
 1. 把侧边栏的宽度扩大到现在的 1.5倍. 2. 优化侧边栏中 user的显示更显眼一些。3。 Create New Node 这里其实应该是在创建top topic时显示的，但如果有selected node时应该直接显示 Reply Topic, 并且下面不再需要重复的Reply Topic
+
 ## Dependencies and Notes
 
 - Tasks should be completed in order as they build on each other

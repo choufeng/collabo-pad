@@ -53,3 +53,39 @@ TBD - created by archiving change enhance-homepage-auto-fill. Update Purpose aft
 - **AND** 必须保持现有方法的返回值格式
 - **AND** 新方法必须遵循相同的错误处理模式
 - **AND** 必须通过现有的所有测试用例
+
+### Requirement: 用户界面状态显示
+
+The system SHALL display current user information in the main interface for better user context awareness.
+
+#### Scenario: Username display in status bar
+
+- **WHEN** a user is logged in
+- **THEN** the current username SHALL be displayed in the status bar
+- **AND** SHALL use the same visual styling as the channel ID display
+- **AND** SHALL include a user avatar or initial indicator
+- **AND** SHALL be positioned adjacent to the channel ID information
+
+#### Scenario: User avatar integration
+
+- **WHEN** displaying user information in the interface
+- **THEN** a user avatar SHALL be shown when available
+- **AND** SHALL fallback to a styled initial when no avatar is provided
+- **AND** SHALL maintain consistent sizing across the interface
+- **AND** SHALL follow accessibility guidelines for color contrast
+
+#### Scenario: User status visibility
+
+- **WHEN** user information is displayed
+- **THEN** the user's current status SHALL be visible
+- **AND** SHALL indicate online/offline status
+- **AND** SHALL update in real-time when status changes
+- **AND** SHALL provide appropriate visual indicators for different states
+
+#### Scenario: Responsive user display
+
+- **WHEN** viewed on different screen sizes
+- **THEN** the user information SHALL adapt appropriately
+- **AND** SHALL maintain readability on mobile devices
+- **AND** SHALL use appropriate truncation for long usernames
+- **AND** SHALL preserve functionality across all device types

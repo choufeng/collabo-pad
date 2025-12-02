@@ -403,11 +403,26 @@ function BoardWithProvider({
                 ? "SSE 错误"
                 : "SSE 未连接"}
         </div>
-        {channelId && (
-          <span className="text-xs text-gray-600 bg-white px-2 py-1 rounded shadow">
-            频道: {channelId}
-          </span>
-        )}
+        <div className="flex items-center space-x-2">
+          {channelId && (
+            <span className="text-xs text-gray-600 bg-white px-2 py-1 rounded shadow">
+              频道: {channelId}
+            </span>
+          )}
+          {user && (
+            <div className="flex items-center space-x-1">
+              <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                {user.name.charAt(0).toUpperCase()}
+              </div>
+              <span
+                className="text-xs text-gray-600 bg-white px-2 py-1 rounded shadow max-w-32 md:max-w-none truncate"
+                title={user.name}
+              >
+                {user.name}
+              </span>
+            </div>
+          )}
+        </div>
         {savingNodes.size > 0 && (
           <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded shadow animate-pulse">
             正在保存 {savingNodes.size} 个节点位置...
