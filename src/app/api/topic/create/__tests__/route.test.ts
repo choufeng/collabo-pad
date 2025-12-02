@@ -108,14 +108,49 @@ describe("/api/topic/create API", () => {
     expect(responseData.error).toBe("MISSING_CONTENT");
   });
 
-  it("should handle invalid coordinates", async () => {
+  it("should handle valid negative coordinates", async () => {
     const mockRequest = {
       json: jest.fn().mockResolvedValue({
         channel_id: "test-channel",
         content: "Test topic",
         user_id: "user-123",
         user_name: "Test User",
-        x: -10, // Invalid negative coordinate
+        x: -10, // Valid negative coordinate
+        y: -20, // Valid negative coordinate
+      }),
+    } as any;
+
+    // Mock the topicService.create method
+    const { topicService } = require("@/services/TopicService");
+    topicService.create.mockResolvedValue({
+      id: "topic-uuid",
+      channelId: "test-channel",
+      content: "Test topic",
+      userId: "user-123",
+      username: "Test User",
+      x: "-10",
+      y: "-20",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    const response = await POST(mockRequest);
+    const responseData = await response.json();
+
+    expect(response.status).toBe(201);
+    expect(responseData.success).toBe(true);
+    expect(responseData.topic.x).toBe(-10);
+    expect(responseData.topic.y).toBe(-20);
+  });
+
+  it("should handle invalid coordinates (NaN)", async () => {
+    const mockRequest = {
+      json: jest.fn().mockResolvedValue({
+        channel_id: "test-channel",
+        content: "Test topic",
+        user_id: "user-123",
+        user_name: "Test User",
+        x: NaN, // Invalid NaN coordinate
       }),
     } as any;
 

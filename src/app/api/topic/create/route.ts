@@ -127,11 +127,11 @@ export async function POST(request: NextRequest) {
     }
 
     // 坐标参数验证（如果提供）
-    if (x !== undefined && (typeof x !== "number" || isNaN(x) || x < 0)) {
+    if (x !== undefined && (typeof x !== "number" || isNaN(x))) {
       return NextResponse.json(
         {
           success: false,
-          message: "x坐标必须是非负数",
+          message: "x坐标必须是有效数字",
           error: "INVALID_X_COORDINATE",
           topic: {} as any,
           messageId: "",
@@ -140,11 +140,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (y !== undefined && (typeof y !== "number" || isNaN(y) || y < 0)) {
+    if (y !== undefined && (typeof y !== "number" || isNaN(y))) {
       return NextResponse.json(
         {
           success: false,
-          message: "y坐标必须是非负数",
+          message: "y坐标必须是有效数字",
           error: "INVALID_Y_COORDINATE",
           topic: {} as any,
           messageId: "",

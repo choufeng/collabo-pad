@@ -77,9 +77,14 @@ After deployment, create separate PR to:
 
 **Context Checklist:**
 
+- [ ] **FIRST: Read `openspec/project.md`** - Essential project context including:
+  - Project purpose: ReactFlow-based collaborative canvas application
+  - Tech stack: Next.js 16.0.3, React 19.2.0, TypeScript 5.x, Tailwind CSS 4.x
+  - **CRITICAL: TDD mandatory development** - 90% test coverage required
+  - Domain concepts: Nodes, Edges, Sidebar, Canvas
+  - Git workflow and code conventions
 - [ ] Read relevant specs in `specs/[capability]/spec.md`
 - [ ] Check pending changes in `changes/` for conflicts
-- [ ] Read `openspec/project.md` for conventions
 - [ ] Run `openspec list` to see active changes
 - [ ] Run `openspec list --specs` to see existing capabilities
 
