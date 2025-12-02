@@ -164,13 +164,3 @@ export const useSideTrowserStore = create<SideTrowserState>()(
     },
   ),
 );
-
-// 添加状态监听调试
-if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
-  useSideTrowserStore.subscribe(
-    (state) => state.form,
-    (form) => {
-      console.log("SideTrowser form 状态变化:", form);
-    },
-  );
-}

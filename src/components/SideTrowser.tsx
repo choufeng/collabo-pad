@@ -44,7 +44,6 @@ export const SideTrowser = () => {
         <div id="node-content-area" className="mt-4">
           <NodeContentView selectedNode={selectedNode} />
         </div>
-
         <hr className="my-6" />
 
         {/* 创建新节点表单 */}

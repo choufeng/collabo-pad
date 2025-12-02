@@ -341,6 +341,8 @@ function BoardWithProvider({
               "添加主题，位置（画布坐标）at menuItem:",
               canvasPosition,
             );
+            // 清空选中的节点信息，只显示创建表单
+            setSelectedNode(null);
             updateForm({
               parent_id: undefined,
               x: canvasPosition.x,
