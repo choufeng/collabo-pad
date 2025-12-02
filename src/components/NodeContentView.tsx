@@ -18,13 +18,13 @@ const NodeContentView: React.FC<NodeContentViewProps> = ({ selectedNode }) => {
 
   const nodeData = selectedNode.data as TopicNodeData;
 
-  // 判断显示的是翻译内容还是原始内容
+  // Check if displaying translated or original content
   const isTranslatedContent = Boolean(nodeData.translated_content);
   const displayContent = nodeData.translated_content || nodeData.content;
 
   return (
     <div className="space-y-4">
-      {/* 节点内容 */}
+      {/* Node content */}
       <div>
         <div className="flex items-center justify-between mb-2">
           <h4 className="text-sm font-medium text-gray-700">
@@ -32,7 +32,7 @@ const NodeContentView: React.FC<NodeContentViewProps> = ({ selectedNode }) => {
           </h4>
           {isTranslatedContent && (
             <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-              翻译内容
+              Translated Content
             </span>
           )}
         </div>
@@ -42,7 +42,7 @@ const NodeContentView: React.FC<NodeContentViewProps> = ({ selectedNode }) => {
               remarkPlugins={[remarkGfm]}
               rehypePlugins={[rehypeHighlight, rehypeRaw]}
               components={{
-                // 自定义组件样式
+                // Custom component styles
                 h1: ({ children }) => (
                   <h1 className="text-lg font-semibold text-gray-900 mb-2">
                     {children}
@@ -140,15 +140,17 @@ const NodeContentView: React.FC<NodeContentViewProps> = ({ selectedNode }) => {
               {displayContent}
             </ReactMarkdown>
           ) : (
-            <p className="text-sm text-gray-500 italic">此节点暂无内容</p>
+            <p className="text-sm text-gray-500 italic">
+              This node has no content
+            </p>
           )}
         </div>
       </div>
 
-      {/* 标签信息 */}
+      {/* Tags information */}
       {nodeData.tags && nodeData.tags.length > 0 && (
         <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-2">标签</h4>
+          <h4 className="text-sm font-medium text-gray-700 mb-2">Tags</h4>
           <div className="flex flex-wrap gap-1">
             {nodeData.tags.map((tag, index) => (
               <span
@@ -162,12 +164,12 @@ const NodeContentView: React.FC<NodeContentViewProps> = ({ selectedNode }) => {
         </div>
       )}
 
-      {/* 节点ID信息 */}
+      {/* Node ID information */}
       {/* <div className="text-xs text-gray-400 border-t border-gray-200 pt-2">
         <div className="space-y-1">
-          <p>节点ID: {selectedNode.id}</p>
-          {nodeData.topic_id && <p>主题ID: {nodeData.topic_id}</p>}
-          {nodeData.parent_id && <p>父节点ID: {nodeData.parent_id}</p>}
+          <p>Node ID: {selectedNode.id}</p>
+          {nodeData.topic_id && <p>Topic ID: {nodeData.topic_id}</p>}
+          {nodeData.parent_id && <p>Parent Node ID: {nodeData.parent_id}</p>}
         </div>
       </div> */}
     </div>
