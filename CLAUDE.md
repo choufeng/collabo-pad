@@ -17,6 +17,7 @@ Use `@/openspec/AGENTS.md` to learn:
 - Project structure and guidelines
 
 **Project Context**: Always read `@/openspec/project.md` first to understand:
+
 - Project purpose and tech stack
 - Domain concepts and core entities
 - Development constraints and conventions

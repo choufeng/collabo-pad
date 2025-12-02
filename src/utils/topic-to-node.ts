@@ -151,17 +151,12 @@ export function topicsToFlowElements(
 
     // 创建父子关系的边
     if (topic.parent_id) {
-      const edge: Edge = {
-        id: `edge-${topic.parent_id}-${topic.id}`,
-        source: `topic-${topic.parent_id}`,
-        target: `topic-${topic.id}`,
-        type: "smoothstep",
-        animated: false,
-        style: {
-          stroke: "#94a3b8",
-          strokeWidth: 2,
-        },
-      };
+      const edge = createParentChildEdge(
+        topic.parent_id,
+        topic.id,
+        topic,
+        childrenMap,
+      );
       edges.push(edge);
     }
   });
@@ -169,7 +164,10 @@ export function topicsToFlowElements(
   // 优化节点位置，避免重叠
   optimizeNodePositions(nodes, childrenMap, opts);
 
-  return { nodes, edges };
+  // 优化连接线路径，避免交叉
+  const optimizedEdges = optimizeEdgePaths(edges);
+
+  return { nodes, edges: optimizedEdges };
 }
 
 /**
@@ -335,6 +333,110 @@ export function nodeToTopic(node: Node<TopicNodeData>): Topic {
     tags: data.tags,
     metadata: data.metadata,
   };
+}
+
+/**
+ * 创建父子节点的连接线
+ */
+export function createParentChildEdge(
+  parentId: string,
+  childId: string,
+  childTopic: Topic,
+  childrenMap: Map<string, Topic[]>,
+): Edge {
+  // 计算连接线层级，用于样式区分
+  const edgeLevel = calculateEdgeLevel(childTopic);
+
+  // 获取同级子节点数量，用于路径规划
+  const siblings = childrenMap.get(parentId) || [];
+  const siblingIndex = siblings.findIndex((topic) => topic.id === childId);
+
+  // 生成连接线样式
+  const edgeStyle = generateEdgeStyle(edgeLevel, siblingIndex, siblings.length);
+
+  return {
+    id: `edge-${parentId}-${childId}`,
+    source: `topic-${parentId}`,
+    target: `topic-${childId}`,
+    type: "smoothstep",
+    animated: false,
+    style: edgeStyle,
+    // 添加路径偏移参数以避免重叠
+    data: {
+      edgeLevel,
+      siblingIndex,
+      totalSiblings: siblings.length,
+    },
+  };
+}
+
+/**
+ * 计算连接线层级
+ */
+function calculateEdgeLevel(topic: Topic): number {
+  if (!topic.parent_id) return 0;
+  return 1; // 简化版，暂时只支持两层
+}
+
+/**
+ * 生成连接线样式
+ */
+function generateEdgeStyle(
+  level: number,
+  siblingIndex: number,
+  _totalSiblings: number,
+): React.CSSProperties {
+  const baseColors = [
+    "#3B82F6", // 蓝色 - 层级0（实际上不会有）
+    "#10B981", // 绿色 - 层级1
+    "#F59E0B", // 橙色 - 层级2
+    "#EF4444", // 红色 - 层级3
+  ];
+
+  const color = baseColors[Math.min(level, baseColors.length - 1)];
+
+  // 根据同级子节点数量计算偏移，避免连接线重叠
+  const offset = siblingIndex > 0 ? siblingIndex * 8 : 0;
+
+  return {
+    stroke: color,
+    strokeWidth: 2,
+    opacity: Math.max(0.7, 1 - level * 0.1), // 层级越深透明度越高
+    // 添加轻微的曲线偏移
+    transform: `translateY(${offset}px)`,
+  };
+}
+
+/**
+ * 优化连接线路径，避免交叉
+ */
+export function optimizeEdgePaths(edges: Edge[]): Edge[] {
+  // 简单的路径优化算法
+  return edges.map((edge) => {
+    const siblingEdges = edges.filter(
+      (e) => e.source === edge.source && e.id !== edge.id,
+    );
+
+    if (siblingEdges.length === 0) return edge;
+
+    // 根据目标节点的Y位置重新排序连接线
+    const sortedEdges = [edge, ...siblingEdges].sort((a, b) => {
+      const aTargetY = parseInt(a.target.split("-")[1]) || 0;
+      const bTargetY = parseInt(b.target.split("-")[1]) || 0;
+      return aTargetY - bTargetY;
+    });
+
+    const currentIndex = sortedEdges.findIndex((e) => e.id === edge.id);
+    const offset = currentIndex * 12; // 每条连接线偏移12px
+
+    return {
+      ...edge,
+      style: {
+        ...edge.style,
+        transform: `translateY(${offset}px)`,
+      },
+    };
+  });
 }
 
 /**
