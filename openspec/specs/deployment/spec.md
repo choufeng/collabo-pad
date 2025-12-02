@@ -1,8 +1,11 @@
 # deployment Specification
 
 ## Purpose
+
 TBD - created by archiving change add-docker-compose-deployment. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Container-based Deployment
 
 系统 SHALL 支持 Docker 容器化部署，允许应用在任何支持 Docker 的环境中运行。
@@ -56,4 +59,3 @@ TBD - created by archiving change add-docker-compose-deployment. Update Purpose 
 - **THEN** 应用日志输出到标准输出
 - **AND** 日志格式适合容器日志聚合工具
 - **AND** 错误日志包含足够的调试信息
-

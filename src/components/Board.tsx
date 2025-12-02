@@ -3,7 +3,6 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import {
   ReactFlow,
-  Node,
   Edge,
   addEdge,
   Connection,
@@ -18,6 +17,8 @@ import {
   useReactFlow,
   ReactFlowProvider,
 } from "@xyflow/react";
+
+import type { Node } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { SidebarMode, NodeData } from "@/types/node";
 import CustomNode from "./CustomNode";
@@ -32,6 +33,8 @@ import type { TopicNodeData } from "@/utils/topic-to-node";
 import { SideTrowser } from "./SideTrowser";
 import { useSideTrowserStore } from "@/stores/side-trowser-store";
 import { removeTopicPrefix } from "@/utils/node-utils";
+import { useLongPress } from "@/hooks/useLongPress";
+import { isTouchDevice } from "@/utils/device-detection";
 
 const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
@@ -366,7 +369,198 @@ function BoardWithProvider({
         });
       }
     },
-    [screenToFlowPosition],
+    [screenToFlowPosition, openSideTrowser, setSelectedNode, updateForm],
+  );
+
+  // 检查是否为触摸设备
+  const isTouchEnabled = isTouchDevice();
+
+  // 处理长按显示右键菜单的函数
+  const handleLongPressContextMenu = useCallback(
+    (event: { clientX: number; clientY: number }) => {
+      // 获取点击位置
+      const clickX = event.clientX;
+      const clickY = event.clientY;
+
+      // 将屏幕坐标转换为画布坐标
+      const canvasPosition = screenToFlowPosition({ x: clickX, y: clickY });
+
+      // 构建菜单项（与右键菜单相同）
+      const menuItems: ContextMenuItem[] = [
+        {
+          id: "add-topic",
+          label: "Add Topic",
+          onClick: () => {
+            console.log("长按添加主题，位置（画布坐标）:", canvasPosition);
+            // 清空选中的节点信息，只显示创建表单
+            setSelectedNode(null);
+            updateForm({
+              parent_id: undefined,
+              x: canvasPosition.x,
+              y: canvasPosition.y,
+            });
+            console.log("长按菜单调用updateForm后，立即打开侧边栏...");
+            openSideTrowser();
+          },
+        },
+      ];
+
+      // 显示右键菜单
+      setContextMenu({
+        visible: true,
+        x: clickX,
+        y: clickY,
+        canvasX: canvasPosition.x,
+        canvasY: canvasPosition.y,
+        menuItems,
+      });
+    },
+    [screenToFlowPosition, openSideTrowser, setSelectedNode, updateForm],
+  );
+
+  // 双击处理 - 用于在触摸设备上触发右键菜单
+  const lastClickTimeRef = useRef<number>(0);
+  const lastClickPositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  const handlePaneClick = useCallback(
+    (event: React.MouseEvent) => {
+      const currentTime = Date.now();
+      const clickPosition = { x: event.clientX, y: event.clientY };
+
+      // 检查是否为双击（时间间隔 < 300ms，位置距离 < 10px）
+      const timeDiff = currentTime - lastClickTimeRef.current;
+      const distance = Math.sqrt(
+        Math.pow(clickPosition.x - lastClickPositionRef.current.x, 2) +
+          Math.pow(clickPosition.y - lastClickPositionRef.current.y, 2),
+      );
+
+      // 如果是双击且在触摸设备上，打开右键菜单
+      if (isTouchEnabled && timeDiff < 300 && distance < 10) {
+        console.log("[Board] Double click detected, opening context menu");
+        event.preventDefault();
+        event.stopPropagation();
+
+        // 调用长按处理函数的逻辑
+        handleLongPressContextMenu({
+          clientX: event.clientX,
+          clientY: event.clientY,
+        });
+
+        return;
+      }
+
+      // 更新上次点击信息
+      lastClickTimeRef.current = currentTime;
+      lastClickPositionRef.current = clickPosition;
+    },
+    [handleLongPressContextMenu, isTouchEnabled],
+  );
+
+  // 长按手势处理
+  const longPressHandlers = useLongPress({
+    onLongPress: handleLongPressContextMenu,
+    delay: 500,
+    hapticFeedback: true,
+    moveThreshold: 10,
+  });
+
+  // 添加调试日志
+  useEffect(() => {
+    console.log("[Board] Touch device detected:", isTouchEnabled);
+  }, [isTouchEnabled]);
+
+  // 添加全局触摸事件监听器作为备选方案
+  useEffect(() => {
+    if (!isTouchEnabled) return;
+
+    const handleGlobalTouchStart = (e: TouchEvent) => {
+      console.log("[Board] Global touch start detected:", {
+        target: e.target,
+        touches: e.touches.length,
+      });
+
+      // 检查是否在ReactFlow区域内
+      const reactFlowElement = document.querySelector(".react-flow");
+      const target = e.target as unknown as Node;
+      if (
+        reactFlowElement &&
+        target &&
+        (reactFlowElement as any).contains(target)
+      ) {
+        console.log("[Board] Touch inside ReactFlow, calling handler");
+        longPressHandlers.onTouchStart(e);
+      }
+    };
+
+    const handleGlobalTouchMove = (e: TouchEvent) => {
+      longPressHandlers.onTouchMove(e);
+    };
+
+    const handleGlobalTouchEnd = (e: TouchEvent) => {
+      longPressHandlers.onTouchEnd();
+    };
+
+    // 使用被动监听器来提高性能
+    document.addEventListener("touchstart", handleGlobalTouchStart, {
+      passive: false,
+    });
+    document.addEventListener("touchmove", handleGlobalTouchMove, {
+      passive: true,
+    });
+    document.addEventListener("touchend", handleGlobalTouchEnd, {
+      passive: true,
+    });
+
+    return () => {
+      document.removeEventListener("touchstart", handleGlobalTouchStart);
+      document.removeEventListener("touchmove", handleGlobalTouchMove);
+      document.removeEventListener("touchend", handleGlobalTouchEnd);
+    };
+  }, [isTouchEnabled, longPressHandlers]);
+
+  // 触摸事件适配器，将React.TouchEvent转换为原生TouchEvent
+  const touchStartHandler = useCallback(
+    (event: React.TouchEvent<HTMLDivElement>) => {
+      console.log("[Board] Touch start handler called:", {
+        isTouchEnabled,
+        hasHandler: !!longPressHandlers.onTouchStart,
+        touches: event.nativeEvent.touches.length,
+      });
+
+      if (isTouchEnabled && longPressHandlers.onTouchStart) {
+        // 阻止ReactFlow的默认触摸行为
+        event.preventDefault();
+        const nativeEvent = event.nativeEvent;
+        console.log("[Board] Calling longPressHandlers.onTouchStart");
+        longPressHandlers.onTouchStart(nativeEvent);
+      } else {
+        console.log("[Board] Touch start handler - conditions not met:", {
+          isTouchEnabled,
+          hasHandler: !!longPressHandlers.onTouchStart,
+        });
+      }
+    },
+    [isTouchEnabled, longPressHandlers.onTouchStart],
+  );
+
+  const touchMoveHandler = useCallback(
+    (event: React.TouchEvent<HTMLDivElement>) => {
+      if (isTouchEnabled && longPressHandlers.onTouchMove) {
+        const nativeEvent = event.nativeEvent;
+        longPressHandlers.onTouchMove(nativeEvent);
+      }
+    },
+    [isTouchEnabled, longPressHandlers.onTouchMove],
+  );
+
+  const touchEndHandler = useCallback(
+    (event: React.TouchEvent<HTMLDivElement>) => {
+      if (isTouchEnabled && longPressHandlers.onTouchEnd) {
+        const nativeEvent = event.nativeEvent;
+        longPressHandlers.onTouchEnd();
+      }
+    },
+    [isTouchEnabled, longPressHandlers.onTouchEnd],
   );
 
   // 关闭右键菜单的函数
@@ -464,6 +658,10 @@ function BoardWithProvider({
         onConnectStart={onConnectStart}
         onConnectEnd={onConnectEnd}
         onContextMenu={handleContextMenu}
+        onPaneClick={handlePaneClick}
+        onTouchStart={isTouchEnabled ? touchStartHandler : undefined}
+        onTouchMove={isTouchEnabled ? touchMoveHandler : undefined}
+        onTouchEnd={isTouchEnabled ? touchEndHandler : undefined}
         fitView
       >
         <Controls />
