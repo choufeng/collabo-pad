@@ -49,22 +49,28 @@ export default function BoardPage() {
           return;
         }
 
-        // 加载当前用户
-        if (!currentUser) {
+        // 如果当前状态没有用户，尝试加载用户
+        let userToUse = currentUser;
+        if (!userToUse) {
           await loadCurrentUser();
+          // 重新获取最新的用户状态
+          userToUse = await userDataService.getCurrentUser();
         }
 
-        // 如果没有用户，重定向到首页
-        const currentUserData = await userDataService.getCurrentUser();
-        if (!currentUserData) {
-          router.push("/");
+        // 验证用户数据完整性
+        if (!userToUse || !userToUse.id || !userToUse.username.trim()) {
+          console.warn("用户身份验证失败，重定向到登录页");
+          setValidationError("用户身份验证失败，请重新登录");
+          setTimeout(() => {
+            router.push("/");
+          }, 1500);
           return;
         }
 
         // 简化的验证完成，直接显示画板
       } catch (error) {
         console.error("验证失败:", error);
-        setValidationError("验证失败");
+        setValidationError("身份验证失败，请重新登录");
         setTimeout(() => {
           router.push("/");
         }, 2000);

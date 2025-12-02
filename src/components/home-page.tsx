@@ -76,14 +76,14 @@ export function HomePage() {
         channelId: urlChannelId || "",
       };
 
-      // 尝试获取最新Username
+      // 尝试获取最后活跃的用户名
       try {
-        const latestUsers = await userDataService.getLatestUsers(1);
-        if (latestUsers.length > 0) {
-          initialFormData.username = latestUsers[0].username;
+        const currentUser = await userDataService.getCurrentUser();
+        if (currentUser && currentUser.username.trim()) {
+          initialFormData.username = currentUser.username;
         }
       } catch (error) {
-        console.error("获取最新用户失败:", error);
+        console.error("获取当前用户失败:", error);
         // 优雅降级，不影响表单初始化
       }
 

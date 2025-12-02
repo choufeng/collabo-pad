@@ -67,14 +67,43 @@ export class UserDataServiceImpl implements UserDataService {
   }
 
   async getCurrentUser(): Promise<User | null> {
-    const session = await this.db.userSessions.toCollection().first();
+    try {
+      // 按 lastActiveAt 降序获取最后活跃的会话
+      const sessions = await this.db.userSessions
+        .orderBy("lastActiveAt")
+        .reverse()
+        .toArray();
 
-    if (!session?.currentUserId) {
+      if (sessions.length === 0) {
+        return null;
+      }
+
+      // 找到第一个有效的会话（有 currentUserId 且对应的用户存在）
+      for (const session of sessions) {
+        if (!session?.currentUserId) {
+          continue;
+        }
+
+        try {
+          const user = await this.db.users.get(session.currentUserId);
+          if (user) {
+            return user;
+          }
+          // 如果用户不存在，清理这个无效的会话记录
+          await this.cleanInvalidSession(session.id);
+        } catch (error) {
+          console.warn("获取用户失败，跳过会话:", error);
+          continue;
+        }
+      }
+
+      // 如果没有找到有效会话，清理所有无效会话
+      await this.cleanAllInvalidSessions();
+      return null;
+    } catch (error) {
+      console.error("获取当前用户失败:", error);
       return null;
     }
-
-    const user = await this.db.users.get(session.currentUserId);
-    return user || null;
   }
 
   async getLatestUsers(limit: number = 10): Promise<User[]> {
@@ -137,6 +166,48 @@ export class UserDataServiceImpl implements UserDataService {
       throw new Error(
         `会话更新失败: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
+    }
+  }
+
+  private async cleanInvalidSession(sessionId?: number): Promise<void> {
+    try {
+      if (sessionId != null) {
+        await this.db.userSessions.delete(sessionId);
+      }
+    } catch (error) {
+      console.warn("清理无效会话失败:", error);
+    }
+  }
+
+  private async cleanAllInvalidSessions(): Promise<void> {
+    try {
+      const sessions = await this.db.userSessions.toArray();
+      const validSessions = [];
+
+      for (const session of sessions) {
+        if (session?.currentUserId) {
+          try {
+            const user = await this.db.users.get(session.currentUserId);
+            if (user) {
+              validSessions.push(session);
+            }
+          } catch (error) {
+            // 忽略获取用户时的错误，这些会话将被清理
+          }
+        }
+      }
+
+      // 清理所有无效会话
+      const sessionsToClean = sessions.filter(
+        (session) => !validSessions.includes(session),
+      );
+      for (const session of sessionsToClean) {
+        if (session.id != null) {
+          await this.db.userSessions.delete(session.id);
+        }
+      }
+    } catch (error) {
+      console.warn("清理无效会话失败:", error);
     }
   }
 

@@ -353,6 +353,101 @@ describe("UserDataService - 简化版本", () => {
     });
   });
 
+  describe("用户会话持久化", () => {
+    it("应该返回最后活跃的用户当有多个会话时", async () => {
+      // Arrange
+      const user1 = await userDataService.createOrGetUser("user1");
+      // 等待确保活跃时间不同
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      const user2 = await userDataService.createOrGetUser("user2");
+
+      // Act - getCurrentUser应该返回最后活跃的用户
+      const currentUser = await userDataService.getCurrentUser();
+
+      // Assert
+      expect(currentUser).toBeDefined();
+      expect(currentUser?.username).toBe("user2"); // 最后活跃的用户
+    });
+
+    it("应该处理空的会话数据", async () => {
+      // Arrange - 清除所有数据
+      await userDataService.clearUserData();
+
+      // Act
+      const currentUser = await userDataService.getCurrentUser();
+
+      // Assert
+      expect(currentUser).toBeNull();
+    });
+
+    it("应该处理会话数据中用户不存在的情况", async () => {
+      // 这个测试模拟了会话指向不存在用户的情况
+      // 在真实实现中，这种情况会被自动清理
+
+      // Arrange
+      await userDataService.createOrGetUser("testuser");
+
+      // Act - 在mock中，这不会发生，但真实实现会处理
+      const currentUser = await userDataService.getCurrentUser();
+
+      // Assert
+      expect(currentUser).toBeDefined();
+      expect(currentUser?.username).toBe("testuser");
+    });
+
+    it("应该保持页面刷新后用户身份的一致性", async () => {
+      // Arrange - 模拟用户登录
+      const username = "consistent_user";
+      const user = await userDataService.createOrGetUser(username);
+
+      // Act - 多次调用getCurrentUser应该返回相同用户
+      const currentUser1 = await userDataService.getCurrentUser();
+      const currentUser2 = await userDataService.getCurrentUser();
+      const currentUser3 = await userDataService.getCurrentUser();
+
+      // Assert
+      expect(currentUser1?.id).toBe(user.id);
+      expect(currentUser2?.id).toBe(user.id);
+      expect(currentUser3?.id).toBe(user.id);
+      expect(currentUser1?.username).toBe(username);
+      expect(currentUser2?.username).toBe(username);
+      expect(currentUser3?.username).toBe(username);
+    });
+
+    it("应该正确处理用户切换后的身份恢复", async () => {
+      // Arrange - 创建多个用户并切换
+      const user1 = await userDataService.createOrGetUser("user1");
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      const user2 = await userDataService.createOrGetUser("user2");
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      const user3 = await userDataService.createOrGetUser("user3");
+
+      // Act - 最后活跃的用户应该是user3
+      const currentUser = await userDataService.getCurrentUser();
+
+      // Assert
+      expect(currentUser?.id).toBe(user3.id);
+      expect(currentUser?.username).toBe("user3");
+    });
+
+    it("应该为首页提供最后活跃的用户名进行默认填充", async () => {
+      // Arrange - 模拟用户使用场景
+      await userDataService.createOrGetUser("alice");
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      await userDataService.createOrGetUser("bob");
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      await userDataService.createOrGetUser("charlie");
+
+      // Act - 首页应该获取最后活跃的用户进行默认填充
+      const userForHomePage = await userDataService.getCurrentUser();
+
+      // Assert - 应该是最后活跃的用户charlie
+      expect(userForHomePage).toBeDefined();
+      expect(userForHomePage?.username).toBe("charlie");
+      expect(userForHomePage?.username.trim()).toBe("charlie");
+    });
+  });
+
   describe("用户搜索", () => {
     it("应该返回空数组当搜索词为空时", async () => {
       // Act

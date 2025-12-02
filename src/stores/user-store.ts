@@ -79,11 +79,29 @@ export const useUserStore = create<UserState>()(
           setError(null);
 
           const user = await userDataService.getCurrentUser();
+
+          // 验证用户数据完整性
+          if (user && !user.id) {
+            console.error("用户数据无效：缺少用户ID");
+            setCurrentUser(null);
+            setError("用户数据无效");
+            return;
+          }
+
+          if (user && !user.username.trim()) {
+            console.error("用户数据无效：缺少用户名");
+            setCurrentUser(null);
+            setError("用户数据无效");
+            return;
+          }
+
           setCurrentUser(user);
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : "用户加载失败";
+          console.error("加载用户失败:", error);
           setError(errorMessage);
+          setCurrentUser(null);
         } finally {
           setLoading(false);
         }
