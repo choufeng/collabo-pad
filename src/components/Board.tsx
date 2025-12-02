@@ -19,7 +19,7 @@ import {
   ReactFlowProvider,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import RightSidebar, { SidebarMode, NodeData } from "./RightSidebar";
+import { SidebarMode, NodeData } from "@/types/node";
 import CustomNode from "./CustomNode";
 import ContextMenu, { ContextMenuItem } from "./ContextMenu";
 import {

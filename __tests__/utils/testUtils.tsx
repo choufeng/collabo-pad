@@ -1,6 +1,6 @@
 import React from "react";
 import { render, RenderResult } from "@testing-library/react";
-import { NodeData } from "../../src/components/RightSidebar";
+import { NodeData } from "../../src/types/node";
 
 export const renderWithProviders = (ui: React.ReactElement, options = {}) => {
   const Wrapper = ({ children }: { children: React.ReactNode }) => (

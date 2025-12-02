@@ -4,7 +4,7 @@
  */
 
 import { Node, Edge } from "@xyflow/react";
-import { NodeData } from "@/components/RightSidebar";
+import { NodeData } from "@/types/node";
 
 // 扩展节点数据接口，包含层级信息
 export interface ExtendedNodeData extends NodeData {
