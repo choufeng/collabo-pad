@@ -10,7 +10,7 @@ import { BaseComponentProps } from "@/types";
 
 interface NodeFormProps extends BaseComponentProps {
   onCancel?: () => void;
-  onSubmitSuccess?: (response: any) => void;
+  onSubmitSuccess?: (response: unknown) => void;
   placeholder?: string;
   submitButtonText?: string;
 }
@@ -19,7 +19,7 @@ const NodeForm: React.FC<NodeFormProps> = ({
   onCancel,
   onSubmitSuccess,
   placeholder = "Enter node content...",
-  submitButtonText = "Create Node",
+  submitButtonText,
   className = "",
 }) => {
   const params = useParams();
@@ -188,19 +188,6 @@ const NodeForm: React.FC<NodeFormProps> = ({
           )}
         </div>
 
-        {process.env.NODE_ENV === "development" && (
-          <div className="p-3 bg-gray-100 rounded-lg text-xs">
-            <div className="font-mono space-y-1">
-              <div>User: {currentUser?.username || "Not loaded"}</div>
-              <div>Channel: {channelId || "Not found"}</div>
-              <div>Parent: {form.parent_id || "None"}</div>
-              <div>
-                Position: ({form.x || "Not set"}, {form.y || "Not set"})
-              </div>
-            </div>
-          </div>
-        )}
-
         <div className="flex space-x-3">
           <button
             type="submit"
@@ -232,7 +219,8 @@ const NodeForm: React.FC<NodeFormProps> = ({
                 Creating...
               </div>
             ) : (
-              submitButtonText
+              submitButtonText ||
+              (form.parent_id ? "Reply Topic" : "Create Node")
             )}
           </button>
 

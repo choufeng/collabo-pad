@@ -18,7 +18,7 @@ export const SideTrowser = () => {
   }
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 w-80 bg-white shadow-lg border-l border-gray-200">
+    <div className="fixed inset-y-0 right-0 z-50 w-[480px] bg-white shadow-lg border-l border-gray-200 max-w-[85vw] md:max-w-none">
       {/* Header area */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         <h2 className="text-lg font-semibold text-gray-900">Sidebar</h2>
@@ -55,12 +55,12 @@ export const SideTrowser = () => {
         <div className="text-sm text-gray-500">
           <div className="mb-4">
             <h3 className="text-base font-medium text-gray-900 mb-2">
-              Create New Node
+              {selectedNode ? "Reply Topic" : "Create New Node"}
             </h3>
             <p className="text-xs text-gray-500">
               {selectedNode
-                ? `Create child node for "${(selectedNode.data as any)?.label || "selected node"}"`
-                : "Create top-level node"}
+                ? `Replying to "${(selectedNode.data as { label?: string })?.label || "selected node"}"`
+                : "Create a new top-level topic"}
             </p>
           </div>
           <NodeForm

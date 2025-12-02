@@ -26,10 +26,18 @@ const NodeContentView: React.FC<NodeContentViewProps> = ({ selectedNode }) => {
     <div className="space-y-4">
       {/* Node content */}
       <div>
-        <div className="flex items-center justify-between mb-2">
-          <h4 className="text-sm font-medium text-gray-700">
-            User:{nodeData.user_name}
-          </h4>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+              {nodeData.user_name?.charAt(0)?.toUpperCase() || "U"}
+            </div>
+            <div>
+              <h4 className="text-base font-semibold text-gray-900">
+                {nodeData.user_name || "Unknown User"}
+              </h4>
+              <p className="text-xs text-gray-500">Author</p>
+            </div>
+          </div>
           {isTranslatedContent && (
             <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
               Translated Content
@@ -79,6 +87,7 @@ const NodeContentView: React.FC<NodeContentViewProps> = ({ selectedNode }) => {
                     {children}
                   </blockquote>
                 ),
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 code: (props: any) => {
                   const { inline, className, children, ...restProps } = props;
                   const match = /language-(\w+)/.exec(className || "");
