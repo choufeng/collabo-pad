@@ -182,7 +182,7 @@ export class UserDataServiceImpl implements UserDataService {
   private async cleanAllInvalidSessions(): Promise<void> {
     try {
       const sessions = await this.db.userSessions.toArray();
-      const validSessions = [];
+      const validSessions: UserSession[] = [];
 
       for (const session of sessions) {
         if (session?.currentUserId) {
