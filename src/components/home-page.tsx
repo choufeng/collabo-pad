@@ -9,6 +9,8 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUserStore } from "../stores/user-store";
 import { userDataService } from "../database/user-data-service";
+import { ComboBox } from "./ComboBox";
+import { ComboBoxOption } from "./ComboBox";
 
 // 表单数据接口
 interface HomeFormData {
@@ -41,6 +43,28 @@ export function HomePage() {
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // ComboBox相关状态
+  const [userOptions, setUserOptions] = useState<ComboBoxOption[]>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+
+  // 加载用户选项
+  const loadUserOptions = async () => {
+    setIsLoadingUsers(true);
+    try {
+      const users = await userDataService.getLatestUsers(10);
+      const options: ComboBoxOption[] = users.map((user) => ({
+        value: user.id,
+        label: user.username,
+      }));
+      setUserOptions(options);
+    } catch (error) {
+      console.error("加载用户选项失败:", error);
+      // 优雅降级，不显示错误
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  };
+
   // 自动填充表单数据
   useEffect(() => {
     const initializeFormData = async () => {
@@ -67,6 +91,7 @@ export function HomePage() {
     };
 
     initializeFormData();
+    loadUserOptions();
   }, [searchParams]);
 
   // 检查是否已有用户登录，如果有则跳转到画板
@@ -117,6 +142,22 @@ export function HomePage() {
         }));
       }
     };
+
+  // 处理username变化（来自ComboBox）
+  const handleUsernameChange = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      username: value,
+    }));
+
+    // 清除username字段的错误
+    if (formErrors.username) {
+      setFormErrors((prev) => ({
+        ...prev,
+        username: undefined,
+      }));
+    }
+  };
 
   // 处理表单提交
   const handleSubmit = async (e: React.FormEvent) => {
@@ -170,23 +211,28 @@ export function HomePage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Username输入 */}
           <div>
-            <label
-              htmlFor="username"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Username
             </label>
-            <input
-              type="text"
-              id="username"
+            <ComboBox
               value={formData.username}
-              onChange={handleInputChange("username")}
+              options={userOptions}
+              isLoading={isLoadingUsers}
               disabled={isLoading}
-              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                formErrors.username ? "border-red-300" : "border-gray-300"
-              }`}
-              placeholder="Enter username"
-              maxLength={100}
+              error={!!formErrors.username}
+              placeholder="输入或选择用户名"
+              createOptionText="创建新用户"
+              onChange={handleUsernameChange}
+              onSelect={(value) => {
+                // 当选择一个用户时，使用用户名
+                const selectedOption = userOptions.find(
+                  (option) => option.value === value,
+                );
+                if (selectedOption) {
+                  handleUsernameChange(selectedOption.label);
+                }
+              }}
+              className="w-full"
             />
             {formErrors.username && (
               <p className="mt-1 text-sm text-red-600">{formErrors.username}</p>
@@ -234,9 +280,15 @@ export function HomePage() {
         <div className="mt-6 p-4 bg-gray-50 rounded-md">
           <h3 className="text-sm font-medium text-gray-700 mb-2">Usage:</h3>
           <ul className="text-sm text-gray-600 space-y-1">
-            <li>• Username: Any non-empty characters, max 100 length</li>
+            <li>
+              • Username: Select from existing users or type a new name (max 100
+              chars)
+            </li>
             <li>• Channel ID: Letters and numbers only, case sensitive</li>
-            <li>• Same username will reuse existing user</li>
+            <li>
+              • Existing users are automatically displayed for quick selection
+            </li>
+            <li>• Same username will reuse existing user data</li>
             <li>• Same channel ID will enter existing channel</li>
           </ul>
         </div>

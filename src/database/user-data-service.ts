@@ -27,6 +27,7 @@ export interface UserDataService {
   createOrGetUser(username: string): Promise<User>;
   getCurrentUser(): Promise<User | null>;
   getLatestUsers(limit?: number): Promise<User[]>;
+  searchUsers(query: string, limit?: number): Promise<User[]>;
   clearUserData(): Promise<void>;
 }
 
@@ -76,7 +77,7 @@ export class UserDataServiceImpl implements UserDataService {
     return user || null;
   }
 
-  async getLatestUsers(limit: number = 5): Promise<User[]> {
+  async getLatestUsers(limit: number = 10): Promise<User[]> {
     try {
       // 按创建时间降序排列，获取最新的用户
       return await this.db.users
@@ -86,6 +87,26 @@ export class UserDataServiceImpl implements UserDataService {
         .toArray();
     } catch (error) {
       console.error("获取最新用户失败:", error);
+      return [];
+    }
+  }
+
+  async searchUsers(query: string, limit: number = 10): Promise<User[]> {
+    try {
+      if (!query.trim().length) {
+        return [];
+      }
+
+      const searchTerm = query.trim().toLowerCase();
+
+      // 搜索用户名包含搜索词的用户，按创建时间降序排列
+      const allUsers = await this.db.users.toArray();
+      return allUsers
+        .filter((user) => user.username.toLowerCase().includes(searchTerm))
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+        .slice(0, limit);
+    } catch (error) {
+      console.error("搜索用户失败:", error);
       return [];
     }
   }

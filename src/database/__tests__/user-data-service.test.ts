@@ -46,7 +46,7 @@ class MockUserDataService {
     this.currentUserId = null;
   }
 
-  async getLatestUsers(limit: number = 5): Promise<User[]> {
+  async getLatestUsers(limit: number = 10): Promise<User[]> {
     try {
       // 将 Map 转换为数组并按创建时间排序
       const allUsers = Array.from(this.users.values());
@@ -55,6 +55,25 @@ class MockUserDataService {
         .slice(0, limit);
     } catch (error) {
       console.error("获取最新用户失败:", error);
+      return [];
+    }
+  }
+
+  async searchUsers(query: string, limit: number = 10): Promise<User[]> {
+    try {
+      if (!query.trim()) {
+        return [];
+      }
+
+      const searchTerm = query.trim().toLowerCase();
+
+      // 搜索用户名包含搜索词的用户，按创建时间降序排列
+      return Array.from(this.users.values())
+        .filter((user) => user.username.toLowerCase().includes(searchTerm))
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+        .slice(0, limit);
+    } catch (error) {
+      console.error("搜索用户失败:", error);
       return [];
     }
   }
@@ -328,9 +347,166 @@ describe("UserDataService - 简化版本", () => {
       const latestUsers = await userDataService.getLatestUsers(); // 使用默认限制
 
       // Assert
-      expect(latestUsers).toHaveLength(5); // 默认限制为5
+      expect(latestUsers).toHaveLength(10); // 默认限制为10
       expect(latestUsers[0].username).toBe("user10"); // 最新
-      expect(latestUsers[4].username).toBe("user6");
+      expect(latestUsers[9].username).toBe("user1");
+    });
+  });
+
+  describe("用户搜索", () => {
+    it("应该返回空数组当搜索词为空时", async () => {
+      // Act
+      const result1 = await userDataService.searchUsers("");
+      const result2 = await userDataService.searchUsers("   ");
+      const result3 = await userDataService.searchUsers("\t\n");
+
+      // Assert
+      expect(result1).toEqual([]);
+      expect(result2).toEqual([]);
+      expect(result3).toEqual([]);
+    });
+
+    it("应该返回空数组当没有匹配用户时", async () => {
+      // Arrange
+      await userDataService.createOrGetUser("Alice");
+      await userDataService.createOrGetUser("Bob");
+
+      // Act
+      const result = await userDataService.searchUsers("Charlie");
+
+      // Assert
+      expect(result).toEqual([]);
+    });
+
+    it("应该搜索到包含搜索词的用户", async () => {
+      // Arrange
+      await userDataService.createOrGetUser("Alice");
+      await userDataService.createOrGetUser("Bob");
+      await userDataService.createOrGetUser("Charlie");
+      await userDataService.createOrGetUser("David");
+
+      // Act
+      const result = await userDataService.searchUsers("a");
+
+      // Assert
+      expect(result).toHaveLength(3); // Alice, Charlie, David 都包含 'a'
+      expect(result.map((u) => u.username)).toContain("Alice");
+      expect(result.map((u) => u.username)).toContain("Charlie");
+      expect(result.map((u) => u.username)).toContain("David");
+      expect(result.map((u) => u.username)).not.toContain("Bob");
+    });
+
+    it("应该不区分大小写搜索", async () => {
+      // Arrange
+      await userDataService.createOrGetUser("Alice");
+      await userDataService.createOrGetUser("bob");
+
+      // Act
+      const result1 = await userDataService.searchUsers("ALICE");
+      const result2 = await userDataService.searchUsers("Bob");
+
+      // Assert
+      expect(result1).toHaveLength(1);
+      expect(result1[0].username).toBe("Alice");
+      expect(result2).toHaveLength(1);
+      expect(result2[0].username).toBe("bob");
+    });
+
+    it("应该按创建时间降序返回搜索结果", async () => {
+      // Arrange
+      await userDataService.createOrGetUser("Alice");
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      await userDataService.createOrGetUser("AliceWonder");
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      await userDataService.createOrGetUser("Alice2");
+
+      // Act
+      const result = await userDataService.searchUsers("Alice");
+
+      // Assert
+      expect(result).toHaveLength(3);
+      expect(result[0].username).toBe("Alice2"); // 最新
+      expect(result[1].username).toBe("AliceWonder"); // 中间
+      expect(result[2].username).toBe("Alice"); // 最早
+    });
+
+    it("应该支持限制搜索结果数量", async () => {
+      // Arrange
+      await userDataService.createOrGetUser("Alice1");
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      await userDataService.createOrGetUser("Alice2");
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      await userDataService.createOrGetUser("Alice3");
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      await userDataService.createOrGetUser("Alice4");
+
+      // Act
+      const result = await userDataService.searchUsers("Alice", 2);
+
+      // Assert
+      expect(result).toHaveLength(2);
+      expect(result[0].username).toBe("Alice4"); // 最新的两个
+      expect(result[1].username).toBe("Alice3");
+    });
+
+    it("应该处理精确匹配的用户名", async () => {
+      // Arrange
+      await userDataService.createOrGetUser("Alice");
+      await userDataService.createOrGetUser("Bob");
+      await userDataService.createOrGetUser("AliceWonder");
+
+      // Act
+      const result = await userDataService.searchUsers("Alice");
+
+      // Assert
+      expect(result).toHaveLength(2); // Alice 和 AliceWonder
+      expect(result.map((u) => u.username)).toContain("Alice");
+      expect(result.map((u) => u.username)).toContain("AliceWonder");
+    });
+
+    it("应该处理默认搜索限制", async () => {
+      // Arrange
+      // 创建超过默认限制的用户
+      for (let i = 1; i <= 15; i++) {
+        await userDataService.createOrGetUser(`TestUser${i}`);
+        await new Promise((resolve) => setTimeout(resolve, 2));
+      }
+
+      // Act
+      const result = await userDataService.searchUsers("TestUser"); // 使用默认限制
+
+      // Assert
+      expect(result).toHaveLength(10); // 默认限制为10
+    });
+
+    it("应该处理特殊字符搜索", async () => {
+      // Arrange
+      await userDataService.createOrGetUser("用户_123");
+      await userDataService.createOrGetUser("test-user");
+      await userDataService.createOrGetUser("normal_user");
+
+      // Act
+      const result1 = await userDataService.searchUsers("用户");
+      const result2 = await userDataService.searchUsers("-");
+
+      // Assert
+      expect(result1).toHaveLength(1);
+      expect(result1[0].username).toBe("用户_123");
+      expect(result2).toHaveLength(1);
+      expect(result2[0].username).toBe("test-user");
+    });
+
+    it("应该处理前后空格的搜索词", async () => {
+      // Arrange
+      await userDataService.createOrGetUser("Alice");
+      await userDataService.createOrGetUser("Bob");
+
+      // Act
+      const result = await userDataService.searchUsers("  Alice  ");
+
+      // Assert
+      expect(result).toHaveLength(1);
+      expect(result[0].username).toBe("Alice");
     });
   });
 });
