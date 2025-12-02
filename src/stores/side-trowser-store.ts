@@ -101,10 +101,16 @@ export const useSideTrowserStore = create<SideTrowserState>()(
 
       // 表单操作方法
       updateForm: (formData) => {
+        console.log("SideTrowserStore updateForm 被调用，传入数据:", formData);
+        console.log("更新前的表单状态:", useSideTrowserStore.getState().form);
         set(
-          (state) => ({
-            form: { ...state.form, ...formData },
-          }),
+          (state) => {
+            const newForm = { ...state.form, ...formData };
+            console.log("更新后的表单状态:", newForm);
+            return {
+              form: newForm,
+            };
+          },
           false,
           "updateForm",
         );
@@ -158,3 +164,13 @@ export const useSideTrowserStore = create<SideTrowserState>()(
     },
   ),
 );
+
+// 添加状态监听调试
+if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
+  useSideTrowserStore.subscribe(
+    (state) => state.form,
+    (form) => {
+      console.log("SideTrowser form 状态变化:", form);
+    },
+  );
+}

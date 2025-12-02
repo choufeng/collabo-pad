@@ -34,6 +34,8 @@ const NodeForm: React.FC<NodeFormProps> = ({
   } = useSideTrowserStore();
   const { currentUser } = useUserStore();
 
+  console.log("NodeForm 组件重新渲染，当前表单状态:", form);
+
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleInputChange = (value: string) => {

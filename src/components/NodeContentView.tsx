@@ -79,12 +79,13 @@ const NodeContentView: React.FC<NodeContentViewProps> = ({ selectedNode }) => {
                     {children}
                   </blockquote>
                 ),
-                code: ({ inline, className, children, ...props }) => {
+                code: (props: any) => {
+                  const { inline, className, children, ...restProps } = props;
                   const match = /language-(\w+)/.exec(className || "");
                   return !inline && match ? (
                     <div className="bg-gray-900 text-gray-100 rounded-md p-3 mb-2 overflow-x-auto">
                       <pre className="text-sm">
-                        <code className={className} {...props}>
+                        <code className={className} {...restProps}>
                           {children}
                         </code>
                       </pre>
@@ -92,7 +93,7 @@ const NodeContentView: React.FC<NodeContentViewProps> = ({ selectedNode }) => {
                   ) : (
                     <code
                       className="bg-gray-200 text-gray-800 px-1 py-0.5 rounded text-sm"
-                      {...props}
+                      {...restProps}
                     >
                       {children}
                     </code>
@@ -165,8 +166,8 @@ const NodeContentView: React.FC<NodeContentViewProps> = ({ selectedNode }) => {
       {/* <div className="text-xs text-gray-400 border-t border-gray-200 pt-2">
         <div className="space-y-1">
           <p>节点ID: {selectedNode.id}</p>
-          {nodeData.topicId && <p>主题ID: {nodeData.topicId}</p>}
-          {nodeData.parentId && <p>父节点ID: {nodeData.parentId}</p>}
+          {nodeData.topic_id && <p>主题ID: {nodeData.topic_id}</p>}
+          {nodeData.parent_id && <p>父节点ID: {nodeData.parent_id}</p>}
         </div>
       </div> */}
     </div>

@@ -151,17 +151,17 @@ function BoardWithProvider({
       const currentTopicId = removeTopicPrefix(node.id);
       console.log("当前节点ID:", node.id, "Topic ID:", currentTopicId);
       console.log(
-        "所有节点的parentId信息:",
+        "所有节点的parent_id信息:",
         nodes.map((n) => ({
           nodeId: n.id,
-          topicId: removeTopicPrefix(n.id),
-          parentId: (n.data as TopicNodeData).parentId,
+          topic_id: removeTopicPrefix(n.id),
+          parent_id: (n.data as TopicNodeData).parent_id,
           rawData: n.data,
         })),
       );
 
       const childNodes = nodes.filter(
-        (n) => (n.data as TopicNodeData).parentId === currentTopicId,
+        (n) => (n.data as TopicNodeData).parent_id === currentTopicId,
       );
       console.log("节点点击 - 子节点数量:", childNodes.length);
 
@@ -251,6 +251,7 @@ function BoardWithProvider({
               x: canvasPosition.x,
               y: canvasPosition.y,
             });
+            console.log("右键菜单调用updateForm后，立即打开侧边栏...");
             openSideTrowser();
           },
         },

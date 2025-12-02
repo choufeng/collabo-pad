@@ -15,8 +15,14 @@ function convertHierarchyNode(node: TopicHierarchyNode): any {
     metadata: node.metadata || undefined,
     tags: node.tags || undefined,
     status: "active" as const,
-    position_x: node.x ? Number(node.x) : undefined,
-    position_y: node.y ? Number(node.y) : undefined,
+    x:
+      node.x != null && node.x !== "" && !isNaN(Number(node.x))
+        ? Number(node.x)
+        : undefined,
+    y:
+      node.y != null && node.y !== "" && !isNaN(Number(node.y))
+        ? Number(node.y)
+        : undefined,
     children: node.children.map(convertHierarchyNode), // 递归转换子节点
   };
 }

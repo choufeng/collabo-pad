@@ -13,7 +13,7 @@ const mockNodes: SelectedNode[] = [
     data: {
       label: "测试节点1",
       content: "这是一个简单的测试内容，没有换行符。",
-      topicId: "1",
+      topic_id: "1",
       user_id: "user-1",
       user_name: "测试用户",
       timestamp: Date.now() - 1000 * 60 * 5, // 5分钟前
@@ -28,7 +28,7 @@ const mockNodes: SelectedNode[] = [
       label: "多行内容测试",
       content:
         "这是第一行内容。\n这是第二行内容。\n\n这是第三行内容，前面有空行。\n这是第四行内容，用来测试换行符是否正确显示。",
-      topicId: "2",
+      topic_id: "2",
       user_id: "user-1",
       user_name: "测试用户",
       timestamp: Date.now() - 1000 * 60 * 10, // 10分钟前
@@ -131,13 +131,13 @@ def quick_sort(arr):
 - [ ] 添加数学公式支持
 - [ ] 实现实时预览功能
 `,
-      topicId: "3",
+      topic_id: "3",
       user_id: "user-2",
       user_name: "另一个用户",
       timestamp: Date.now() - 1000 * 60 * 60, // 1小时前
       level: 2,
       tags: ["复杂内容", "Markdown", "特殊字符"],
-      parentId: "2",
+      parent_id: "2",
     } as TopicNodeData,
     position: { x: 500, y: 300 },
   },
@@ -147,7 +147,7 @@ def quick_sort(arr):
     data: {
       label: "空内容测试",
       content: "",
-      topicId: "4",
+      topic_id: "4",
       user_id: "user-1",
       user_name: "测试用户",
       timestamp: Date.now() - 1000 * 60 * 2, // 2分钟前
@@ -205,20 +205,28 @@ export default function NodeContentDisplayTest() {
                   }`}
                 >
                   <div className="font-medium text-gray-900 mb-1">
-                    {node.data.label}
+                    {(node.data as TopicNodeData).label}
                   </div>
                   <div className="text-sm text-gray-600">
-                    {node.data.content
-                      ? node.data.content.substring(0, 50) +
-                        (node.data.content.length > 50 ? "..." : "")
+                    {(node.data as TopicNodeData).content
+                      ? (node.data as TopicNodeData).content.substring(0, 50) +
+                        ((node.data as TopicNodeData).content.length > 50
+                          ? "..."
+                          : "")
                       : "无内容"}
                   </div>
                   <div className="flex items-center space-x-2 mt-2 text-xs text-gray-500">
-                    <span>Level: {node.data.level}</span>
-                    {node.data.tags && node.data.tags.length > 0 && (
-                      <span>标签: {node.data.tags.length}</span>
-                    )}
-                    <span>内容长度: {node.data.content?.length || 0}</span>
+                    <span>Level: {(node.data as TopicNodeData).level}</span>
+                    {(node.data as TopicNodeData).tags &&
+                      (node.data as TopicNodeData).tags!.length > 0 && (
+                        <span>
+                          标签: {(node.data as TopicNodeData).tags!.length}
+                        </span>
+                      )}
+                    <span>
+                      内容长度:{" "}
+                      {(node.data as TopicNodeData).content?.length || 0}
+                    </span>
                   </div>
                 </button>
               ))}

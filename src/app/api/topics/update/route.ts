@@ -217,7 +217,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // 转换为前端兼容的格式
+    // 直接使用数据库格式，无需转换
     const responseTopic: Topic = {
       id: updatedTopic.id,
       parent_id: updatedTopic.parentId || undefined,
@@ -230,8 +230,30 @@ export async function PUT(request: NextRequest) {
       metadata: updatedTopic.metadata || undefined,
       tags: updatedTopic.tags || undefined,
       status: "active" as const,
-      position_x: updatedTopic.x ? Number(updatedTopic.x) : undefined,
-      position_y: updatedTopic.y ? Number(updatedTopic.y) : undefined,
+      x:
+        updatedTopic.x != null &&
+        updatedTopic.x !== "" &&
+        !isNaN(Number(updatedTopic.x))
+          ? Number(updatedTopic.x)
+          : undefined,
+      y:
+        updatedTopic.y != null &&
+        updatedTopic.y !== "" &&
+        !isNaN(Number(updatedTopic.y))
+          ? Number(updatedTopic.y)
+          : undefined,
+      w:
+        updatedTopic.w != null &&
+        updatedTopic.w !== "" &&
+        !isNaN(Number(updatedTopic.w))
+          ? Number(updatedTopic.w)
+          : undefined,
+      h:
+        updatedTopic.h != null &&
+        updatedTopic.h !== "" &&
+        !isNaN(Number(updatedTopic.h))
+          ? Number(updatedTopic.h)
+          : undefined,
     };
 
     // 返回成功响应

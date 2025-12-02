@@ -99,13 +99,13 @@ export interface Topic {
   tags?: string[];
   status?: "active" | "archived" | "deleted";
   /** 画布上的 x 坐标位置（像素） */
-  position_x?: number;
+  x?: number;
   /** 画布上的 y 坐标位置（像素） */
-  position_y?: number;
+  y?: number;
   /** 画布上的宽度（像素） */
-  position_w?: number;
+  w?: number;
   /** 画布上的高度（像素） */
-  position_h?: number;
+  h?: number;
 }
 
 export interface CreateTopicRequest {

@@ -5,6 +5,8 @@ import NodeContentView from "./NodeContentView";
 export const SideTrowser = () => {
   const { isOpen, close, form, reset, selectedNode } = useSideTrowserStore();
 
+  console.log("SideTrowser 组件渲染，isOpen:", isOpen, "form:", form);
+
   // 如果关闭状态则不渲染
   if (!isOpen) {
     return null;

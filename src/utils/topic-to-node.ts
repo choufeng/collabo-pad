@@ -6,18 +6,35 @@ import { Node, Edge, Position } from "@xyflow/react";
 import type { Topic } from "@/types/redis-stream";
 import { ExtendedNode } from "./node-hierarchy";
 
+/**
+ * 安全转换坐标值为数字
+ */
+function safeParseCoordinate(value: any): number | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value === "number") return isNaN(value) ? undefined : value;
+  if (typeof value === "string") {
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? undefined : parsed;
+  }
+  return undefined;
+}
+
 // 节点数据接口
 export interface TopicNodeData extends Record<string, unknown> {
   label: string;
   content: string;
   translated_content?: string;
   level: number;
-  parentId?: string;
-  childIds?: string[];
-  topicId: string;
+  parent_id?: string;
+  child_ids?: string[];
+  topic_id: string;
   user_id: string;
   user_name: string;
   timestamp: number;
+  x?: number;
+  y?: number;
+  w?: number;
+  h?: number;
   tags?: string[];
   metadata?: Record<string, any>;
   onAddChild?: (parentId: string) => void;
@@ -63,13 +80,16 @@ export function topicToNode(
   // 生成节点标签
   const label = generateNodeLabel(topic.content, opts.maxLabelLength);
 
+  // 安全解析坐标值
+  const x = safeParseCoordinate(topic.x);
+  const y = safeParseCoordinate(topic.y);
+
   // 创建扩展的 metadata，包含坐标信息以便后续检测
   const extendedMetadata = {
     ...topic.metadata,
-    hasStoredCoordinates:
-      topic.position_x !== undefined && topic.position_y !== undefined,
-    position_x: topic.position_x,
-    position_y: topic.position_y,
+    hasStoredCoordinates: x !== undefined && y !== undefined,
+    x: x,
+    y: y,
   };
 
   return {
@@ -81,11 +101,15 @@ export function topicToNode(
       content: topic.content,
       translated_content: topic.translated_content,
       level,
-      parentId: topic.parent_id,
-      topicId: topic.id,
+      parent_id: topic.parent_id,
+      topic_id: topic.id,
       user_id: topic.user_id,
       user_name: topic.user_name,
       timestamp: topic.timestamp,
+      x: x,
+      y: y,
+      w: safeParseCoordinate(topic.w),
+      h: safeParseCoordinate(topic.h),
       tags: topic.tags,
       metadata: extendedMetadata,
       onAddChild,
@@ -168,10 +192,13 @@ function calculateNodePosition(
   options: Required<TopicToNodeOptions>,
 ): { x: number; y: number } {
   // 如果主题有存储的坐标信息，优先使用
-  if (topic.position_x !== undefined && topic.position_y !== undefined) {
+  const x = safeParseCoordinate(topic.x);
+  const y = safeParseCoordinate(topic.y);
+
+  if (x !== undefined && y !== undefined) {
     return {
-      x: topic.position_x,
-      y: topic.position_y,
+      x: x,
+      y: y,
     };
   }
 
@@ -216,8 +243,10 @@ function optimizeNodePositions(
     // 如果有明确的坐标标记，或者坐标信息存在于 metadata 中
     const hasCoordinates =
       hasStoredCoordinates ||
-      (node.data.metadata?.position_x !== undefined &&
-        node.data.metadata?.position_y !== undefined);
+      (node.data.metadata?.x !== undefined &&
+        node.data.metadata?.y !== undefined &&
+        !isNaN(Number(node.data.metadata.x)) &&
+        !isNaN(Number(node.data.metadata.y)));
 
     if (hasCoordinates) {
       nodesWithCoordinates.push(node);
@@ -296,8 +325,8 @@ function adjustOverlappingNodes(
 export function nodeToTopic(node: Node<TopicNodeData>): Topic {
   const data = node.data;
   return {
-    id: data.topicId,
-    parent_id: data.parentId,
+    id: data.topic_id,
+    parent_id: data.parent_id,
     channel_id: "", // 需要从外部传入
     content: data.content,
     user_id: data.user_id,

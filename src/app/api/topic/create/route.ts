@@ -246,7 +246,7 @@ export async function POST(request: NextRequest) {
         tags: createRequest.tags || null,
       });
 
-      // 转换为前端兼容的格式
+      // 直接使用数据库格式，无需转换
       const responseTopic = {
         id: topic.id,
         parent_id: topic.parentId || undefined,
@@ -259,10 +259,22 @@ export async function POST(request: NextRequest) {
         metadata: topic.metadata || undefined,
         tags: topic.tags || undefined,
         status: "active" as const,
-        position_x: topic.x ? Number(topic.x) : undefined,
-        position_y: topic.y ? Number(topic.y) : undefined,
-        position_w: topic.w ? Number(topic.w) : undefined,
-        position_h: topic.h ? Number(topic.h) : undefined,
+        x:
+          topic.x != null && topic.x !== "" && !isNaN(Number(topic.x))
+            ? Number(topic.x)
+            : undefined,
+        y:
+          topic.y != null && topic.y !== "" && !isNaN(Number(topic.y))
+            ? Number(topic.y)
+            : undefined,
+        w:
+          topic.w != null && topic.w !== "" && !isNaN(Number(topic.w))
+            ? Number(topic.w)
+            : undefined,
+        h:
+          topic.h != null && topic.h !== "" && !isNaN(Number(topic.h))
+            ? Number(topic.h)
+            : undefined,
       };
 
       // 返回成功响应

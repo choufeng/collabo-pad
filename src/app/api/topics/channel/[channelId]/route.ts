@@ -36,7 +36,7 @@ export async function GET(
     // 从数据库获取主题列表
     const topics = await topicService.findByChannelId(channelId);
 
-    // 转换为前端兼容的格式
+    // 直接使用数据库格式，无需转换
     const convertedTopics = topics.map((topic) => ({
       id: topic.id,
       parent_id: topic.parentId || undefined,
@@ -49,10 +49,22 @@ export async function GET(
       metadata: topic.metadata || undefined,
       tags: topic.tags || undefined,
       status: "active" as const, // 数据库中所有主题都是活跃的
-      position_x: topic.x ? Number(topic.x) : undefined,
-      position_y: topic.y ? Number(topic.y) : undefined,
-      position_w: topic.w ? Number(topic.w) : undefined,
-      position_h: topic.h ? Number(topic.h) : undefined,
+      x:
+        topic.x != null && topic.x !== "" && !isNaN(Number(topic.x))
+          ? Number(topic.x)
+          : undefined,
+      y:
+        topic.y != null && topic.y !== "" && !isNaN(Number(topic.y))
+          ? Number(topic.y)
+          : undefined,
+      w:
+        topic.w != null && topic.w !== "" && !isNaN(Number(topic.w))
+          ? Number(topic.w)
+          : undefined,
+      h:
+        topic.h != null && topic.h !== "" && !isNaN(Number(topic.h))
+          ? Number(topic.h)
+          : undefined,
     }));
 
     // 构建响应
