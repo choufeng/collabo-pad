@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import {
   ReactFlow,
   Node,
@@ -96,6 +96,10 @@ function BoardWithProvider({
   // 子评论相关状态
   const [parentNodeData, setParentNodeData] = useState<NodeData>();
 
+  // 拖动位置更新相关状态
+  const [savingNodes, setSavingNodes] = useState<Set<string>>(new Set());
+  const saveTimeoutRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+
   // 右键菜单相关状态
   const [contextMenu, setContextMenu] = useState<{
     visible: boolean;
@@ -116,6 +120,97 @@ function BoardWithProvider({
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
     [setEdges],
+  );
+
+  // 保存节点位置到数据库
+  const saveNodePosition = useCallback(
+    async (nodeId: string, x: number, y: number) => {
+      const topicId = removeTopicPrefix(nodeId);
+
+      // 添加到保存状态
+      setSavingNodes((prev) => new Set([...prev, nodeId]));
+
+      try {
+        const response = await fetch(`/api/topics/update`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: topicId,
+            x: Math.round(x),
+            y: Math.round(y),
+          }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          console.log(`节点 ${topicId} 位置保存成功: (${x}, ${y})`);
+        } else {
+          console.error(`节点 ${topicId} 位置保存失败:`, result.message);
+        }
+      } catch (error) {
+        console.error(`节点 ${topicId} 位置保存错误:`, error);
+      } finally {
+        // 从保存状态中移除
+        setSavingNodes((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(nodeId);
+          return newSet;
+        });
+      }
+    },
+    [],
+  );
+
+  // 防抖保存位置
+  const debouncedSavePosition = useCallback(
+    (nodeId: string, x: number, y: number) => {
+      // 清除之前的定时器
+      const existingTimeout = saveTimeoutRef.current.get(nodeId);
+      if (existingTimeout) {
+        clearTimeout(existingTimeout);
+      }
+
+      // 设置新的定时器
+      const timeout = setTimeout(() => {
+        saveNodePosition(nodeId, x, y);
+        saveTimeoutRef.current.delete(nodeId);
+      }, 300); // 300ms 防抖
+
+      saveTimeoutRef.current.set(nodeId, timeout);
+    },
+    [saveNodePosition],
+  );
+
+  // 节点拖动结束
+  const onNodeDragEnd = useCallback(
+    (event: React.MouseEvent, node: Node) => {
+      // 获取节点数据
+      const nodeData = node.data as TopicNodeData;
+      if (!nodeData.topic_id) return;
+
+      // 检查位置是否发生了实际变化
+      const currentX = node.position.x;
+      const currentY = node.position.y;
+      const originalX = nodeData.x;
+      const originalY = nodeData.y;
+
+      const hasPositionChanged =
+        originalX === undefined ||
+        Math.abs(currentX - originalX) > 1 ||
+        originalY === undefined ||
+        Math.abs(currentY - originalY) > 1;
+
+      if (hasPositionChanged) {
+        console.log(
+          `节点 ${node.id} 位置发生变化: (${originalX}, ${originalY}) -> (${currentX}, ${currentY})`,
+        );
+        debouncedSavePosition(node.id, currentX, currentY);
+      }
+    },
+    [debouncedSavePosition],
   );
 
   const openCreateSidebar = useCallback(() => {
@@ -311,6 +406,11 @@ function BoardWithProvider({
             频道: {channelId}
           </span>
         )}
+        {savingNodes.size > 0 && (
+          <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded shadow animate-pulse">
+            正在保存 {savingNodes.size} 个节点位置...
+          </span>
+        )}
       </div>
 
       {/* SSE 错误提示 */}
@@ -343,6 +443,7 @@ function BoardWithProvider({
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onNodeClick={onNodeClick}
+        onNodeDrag={onNodeDragEnd}
         onConnectStart={onConnectStart}
         onConnectEnd={onConnectEnd}
         onContextMenu={handleContextMenu}
