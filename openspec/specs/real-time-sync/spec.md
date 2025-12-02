@@ -1,8 +1,11 @@
 # real-time-sync Specification
 
 ## Purpose
+
 TBD - created by archiving change fix-node-position-sync. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: 向后兼容性保证
 
 系统 MUST 确保新的实时同步功能与现有的创建同步机制完全兼容。
@@ -26,4 +29,3 @@ TBD - created by archiving change fix-node-position-sync. Update Purpose after a
 - **AND** 必须模拟多用户同时操作场景
 - **AND** 必须验证网络异常恢复机制
 - **AND** 测试覆盖率必须达到 90% 以上
-

@@ -3,7 +3,9 @@
 ## Purpose
 
 TBD - created by archiving change enhance-homepage-auto-fill. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: 用户数据自动查询
 
 系统 SHALL 提供从本地数据库查询最新用户数据的能力，用于首页表单的自动填充。
@@ -87,4 +89,3 @@ The system SHALL display current user information in the main interface for bett
 - **AND** 必须基于 `getCurrentUser()` 方法获取用户信息
 - **AND** 必须确保填充的用户名是最后登录的用户
 - **AND** 必须保持输入框的可编辑状态
-
