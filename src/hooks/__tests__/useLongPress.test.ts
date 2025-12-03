@@ -25,21 +25,21 @@ describe("useLongPress", () => {
     jest.useRealTimers();
   });
 
-  it("应该触发长按回调", () => {
+  it("should trigger long press callback", () => {
     const onLongPress = jest.fn();
 
     const { result } = renderHook(() =>
       useLongPress({ onLongPress, delay: 500 }),
     );
 
-    // 模拟触摸开始
+    // Simulate touch start
     act(() => {
       result.current.onTouchStart({
         touches: [{ clientX: 100, clientY: 200 }],
       } as TouchEvent);
     });
 
-    // 快进时间超过500ms
+    // Fast forward time past 500ms
     act(() => {
       jest.advanceTimersByTime(600);
     });
@@ -52,26 +52,26 @@ describe("useLongPress", () => {
     );
   });
 
-  it("应该不触发短按的回调", () => {
+  it("should not trigger short press callback", () => {
     const onLongPress = jest.fn();
 
     const { result } = renderHook(() =>
       useLongPress({ onLongPress, delay: 500 }),
     );
 
-    // 模拟触摸开始
+    // Simulate touch start
     act(() => {
       result.current.onTouchStart({
         touches: [{ clientX: 100, clientY: 200 }],
       } as TouchEvent);
     });
 
-    // 快进时间小于500ms
+    // Fast forward time less than 500ms
     act(() => {
       jest.advanceTimersByTime(300);
     });
 
-    // 模拟触摸结束
+    // Simulate touch end
     act(() => {
       result.current.onTouchEnd();
     });
@@ -79,7 +79,7 @@ describe("useLongPress", () => {
     expect(onLongPress).not.toHaveBeenCalled();
   });
 
-  it("应该支持可配置的延迟时间", () => {
+  it("should support configurable delay time", () => {
     const onLongPress = jest.fn();
 
     const { result } = renderHook(() =>
@@ -92,14 +92,14 @@ describe("useLongPress", () => {
       } as TouchEvent);
     });
 
-    // 快进时间小于1000ms
+    // Fast forward time less than 1000ms
     act(() => {
       jest.advanceTimersByTime(900);
     });
 
     expect(onLongPress).not.toHaveBeenCalled();
 
-    // 快进时间超过1000ms
+    // Fast forward time past 1000ms
     act(() => {
       jest.advanceTimersByTime(200);
     });

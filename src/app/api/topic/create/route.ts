@@ -211,7 +211,7 @@ export async function POST(request: NextRequest) {
 
     // 构建创建主题请求
     const createRequest: CreateTopicRequest = {
-      parent_id: parent_id?.trim() || undefined,
+      parent_id: parent_id && parent_id.trim() ? parent_id.trim() : null,
       channel_id: channel_id.trim(),
       content: sanitizedContent.trim(), // 存储原始内容
       user_id: user_id.trim(),

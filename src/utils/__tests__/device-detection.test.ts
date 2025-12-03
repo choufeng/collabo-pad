@@ -34,7 +34,7 @@ describe("device-detection", () => {
   });
 
   describe("isTouchDevice", () => {
-    it("应该检测到支持触摸的设备", () => {
+    it("should detect touch-enabled device", () => {
       Object.defineProperty(window, "navigator", {
         writable: true,
         value: createMockNavigator({
@@ -45,7 +45,7 @@ describe("device-detection", () => {
       expect(isTouchDevice()).toBe(true);
     });
 
-    it("应该检测到不支持触摸的设备", () => {
+    it("should detect non-touch device", () => {
       Object.defineProperty(window, "navigator", {
         writable: true,
         value: createMockNavigator({
@@ -56,7 +56,7 @@ describe("device-detection", () => {
       expect(isTouchDevice()).toBe(false);
     });
 
-    it("应该检测到移动设备（通过maxTouchPoints）", () => {
+    it("should detect mobile device (via maxTouchPoints)", () => {
       Object.defineProperty(window, "navigator", {
         writable: true,
         value: createMockNavigator({
@@ -68,7 +68,7 @@ describe("device-detection", () => {
       expect(isTouchDevice()).toBe(true);
     });
 
-    it("应该检测到iPad设备", () => {
+    it("should detect iPad device", () => {
       Object.defineProperty(window, "navigator", {
         writable: true,
         value: createMockNavigator({
@@ -80,7 +80,7 @@ describe("device-detection", () => {
       expect(isTouchDevice()).toBe(true);
     });
 
-    it("应该检测到Android设备", () => {
+    it("should detect Android device", () => {
       Object.defineProperty(window, "navigator", {
         writable: true,
         value: createMockNavigator({
@@ -92,7 +92,7 @@ describe("device-detection", () => {
       expect(isTouchDevice()).toBe(true);
     });
 
-    it("应该检测到桌面设备", () => {
+    it("should detect desktop device", () => {
       Object.defineProperty(window, "navigator", {
         writable: true,
         value: createMockNavigator({
@@ -106,7 +106,7 @@ describe("device-detection", () => {
   });
 
   describe("isMobileDevice", () => {
-    it("应该检测到iPhone", () => {
+    it("should detect iPhone", () => {
       Object.defineProperty(window, "navigator", {
         writable: true,
         value: createMockNavigator({
@@ -117,7 +117,7 @@ describe("device-detection", () => {
       expect(isMobileDevice()).toBe(true);
     });
 
-    it("应该检测到Android手机", () => {
+    it("should detect Android phone", () => {
       Object.defineProperty(window, "navigator", {
         writable: true,
         value: createMockNavigator({
@@ -128,7 +128,7 @@ describe("device-detection", () => {
       expect(isMobileDevice()).toBe(true);
     });
 
-    it("应该检测到iPad但不认为是手机", () => {
+    it("should detect iPad but not as phone", () => {
       Object.defineProperty(window, "navigator", {
         writable: true,
         value: createMockNavigator({
@@ -139,7 +139,7 @@ describe("device-detection", () => {
       expect(isMobileDevice()).toBe(false);
     });
 
-    it("应该检测到桌面设备", () => {
+    it("should detect desktop device", () => {
       Object.defineProperty(window, "navigator", {
         writable: true,
         value: createMockNavigator({

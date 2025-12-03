@@ -101,7 +101,7 @@ describe("Board Touch Events", () => {
   };
 
   describe("Touch Device Detection", () => {
-    it("应该在非触摸设备上不添加触摸事件监听器", () => {
+    it("should not add touch event listeners on non-touch devices", () => {
       mockIsTouchDevice.mockReturnValue(false);
 
       renderBoard();
@@ -112,7 +112,7 @@ describe("Board Touch Events", () => {
       expect(reactFlow).not.toHaveAttribute("onTouchEnd");
     });
 
-    it("应该在触摸设备上添加触摸事件监听器", () => {
+    it("should add touch event listeners on touch devices", () => {
       mockIsTouchDevice.mockReturnValue(true);
 
       renderBoard();
@@ -129,13 +129,13 @@ describe("Board Touch Events", () => {
   });
 
   describe("Long Press Context Menu", () => {
-    it("应该在长按时触发右键菜单", async () => {
+    it("should trigger context menu on long press", async () => {
       mockIsTouchDevice.mockReturnValue(true);
 
       const mockOnLongPress = jest.fn();
       useLongPress.mockReturnValue({
         onTouchStart: (e: TouchEvent) => {
-          // 模拟长按回调
+          // Mock long press callback
           setTimeout(() => {
             mockOnLongPress({
               clientX: 100,
@@ -152,12 +152,12 @@ describe("Board Touch Events", () => {
 
       const pane = screen.getByTestId("react-flow-pane");
 
-      // 模拟触摸开始
+      // Simulate touch start
       fireEvent.touchStart(pane, {
         touches: [{ clientX: 100, clientY: 200 }],
       });
 
-      // 等待长按回调
+      // Wait for long press callback
       await waitFor(
         () => {
           expect(mockOnLongPress).toHaveBeenCalledWith({
@@ -169,7 +169,7 @@ describe("Board Touch Events", () => {
       );
     });
 
-    it("应该在长按时显示右键菜单", async () => {
+    it("should show context menu on long press", async () => {
       mockIsTouchDevice.mockReturnValue(true);
 
       const mockOnLongPress = jest.fn();
@@ -180,7 +180,7 @@ describe("Board Touch Events", () => {
         cancel: jest.fn(),
       });
 
-      // 重新mock useLongPress来模拟实际的长按行为
+      // Re-mock useLongPress to simulate actual long press behavior
       let longPressCallback:
         | ((event: { clientX: number; clientY: number }) => void)
         | null = null;
@@ -196,12 +196,12 @@ describe("Board Touch Events", () => {
 
       renderBoard();
 
-      // 模拟长按触发
+      // Simulate long press trigger
       if (longPressCallback) {
         longPressCallback({ clientX: 100, clientY: 200 });
       }
 
-      // 检查是否调用了预期的处理逻辑
+      // Check if expected handling logic was called
       expect(useLongPress).toHaveBeenCalledWith(
         expect.objectContaining({
           onLongPress: expect.any(Function),

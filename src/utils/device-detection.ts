@@ -8,15 +8,15 @@ export interface DeviceInfo {
 }
 
 /**
- * 检测设备是否支持触摸
+ * Check if device supports touch
  */
 export function isTouchDevice(): boolean {
-  // 检查是否支持触摸事件API
+  // Check if touch event APIs are supported
   if (typeof window !== "undefined") {
     return (
       "ontouchstart" in window ||
       navigator.maxTouchPoints > 0 ||
-      // @ts-ignore - 检查旧的触摸事件API
+      // @ts-ignore - Check legacy touch event APIs
       navigator.msMaxTouchPoints > 0
     );
   }
@@ -24,7 +24,7 @@ export function isTouchDevice(): boolean {
 }
 
 /**
- * 检测是否为移动设备（手机）
+ * Check if device is mobile (phone)
  */
 export function isMobileDevice(): boolean {
   if (typeof window === "undefined") {
@@ -33,7 +33,7 @@ export function isMobileDevice(): boolean {
 
   const userAgent = navigator.userAgent;
 
-  // 检测手机设备，排除平板
+  // Check for phone devices, exclude tablets
   return (
     /Mobi|iPhone|iPod|BlackBerry|IEMobile|Opera Mini|Android.*Mobile/i.test(
       userAgent,
@@ -42,7 +42,7 @@ export function isMobileDevice(): boolean {
 }
 
 /**
- * 获取详细的设备信息
+ * Get detailed device information
  */
 export function getDeviceInfo(): DeviceInfo {
   const userAgent = typeof navigator !== "undefined" ? navigator.userAgent : "";
@@ -56,7 +56,7 @@ export function getDeviceInfo(): DeviceInfo {
     !isMobile &&
     (/iPad|Android(?!.*Mobile)/i.test(userAgent) || maxTouchPoints > 1);
 
-  // 检测平台
+  // Detect platform
   let platform: DeviceInfo["platform"] = "unknown";
 
   if (/iPhone|iPad|iPod/i.test(userAgent)) {
@@ -82,7 +82,7 @@ export function getDeviceInfo(): DeviceInfo {
 }
 
 /**
- * 检测是否为iOS设备
+ * Check if device is iOS
  */
 export function isIOSDevice(): boolean {
   if (typeof navigator === "undefined") {
@@ -92,14 +92,14 @@ export function isIOSDevice(): boolean {
 }
 
 /**
- * 检测是否为iPad设备
+ * Check if device is iPad
  */
 export function isIPadDevice(): boolean {
   if (typeof navigator === "undefined") {
     return false;
   }
 
-  // iOS 13+ 上的iPad会被检测为Mac，需要额外检查
+  // iPad on iOS 13+ gets detected as Mac, need additional check
   return (
     /iPad/i.test(navigator.userAgent) ||
     (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
@@ -107,7 +107,7 @@ export function isIPadDevice(): boolean {
 }
 
 /**
- * 检测是否为Android设备
+ * Check if device is Android
  */
 export function isAndroidDevice(): boolean {
   if (typeof navigator === "undefined") {
