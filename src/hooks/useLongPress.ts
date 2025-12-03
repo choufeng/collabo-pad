@@ -41,7 +41,7 @@ export function useLongPress({
 
   const onTouchStart = useCallback(
     (event: TouchEvent) => {
-      // 只支持单点触摸
+      // Only support single touch
       if (event.touches.length !== 1) {
         return;
       }
@@ -83,7 +83,7 @@ export function useLongPress({
       const deltaX = Math.abs(touch.clientX - startPositionRef.current.x);
       const deltaY = Math.abs(touch.clientY - startPositionRef.current.y);
 
-      // 如果移动超过阈值，取消长按
+      // If movement exceeds threshold, cancel long press
       if (deltaX > moveThreshold || deltaY > moveThreshold) {
         cancel();
       }
@@ -95,7 +95,7 @@ export function useLongPress({
     cancel();
   }, [cancel]);
 
-  // 清理定时器
+  // Cleanup timer
   useEffect(() => {
     return () => {
       cancel();

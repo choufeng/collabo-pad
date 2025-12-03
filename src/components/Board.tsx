@@ -39,7 +39,7 @@ import { isTouchDevice } from "@/utils/device-detection";
 const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
 
-// Board 组件 Props 接口
+// Board component Props interface
 export interface BoardProps {
   initialNodes?: Node[];
   initialEdges?: Edge[];
@@ -56,12 +56,12 @@ export interface BoardProps {
   };
 }
 
-// 注册自定义节点类型
+// Register custom node types
 const nodeTypes: NodeTypes = {
   custom: CustomNode,
 };
 
-// 内部组件，使用 ReactFlow context
+// Internal component, using ReactFlow context
 function BoardWithProvider({
   initialNodes = [],
   initialEdges = [],
@@ -76,7 +76,7 @@ function BoardWithProvider({
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [nodeId, setNodeId] = useState(1);
 
-  // ReactFlow 实例，用于坐标转换
+  // ReactFlow instance for coordinate conversion
   const { getViewport, screenToFlowPosition } = useReactFlow();
   const {
     open: openSideTrowser,
@@ -84,26 +84,26 @@ function BoardWithProvider({
     setSelectedNode,
   } = useSideTrowserStore();
 
-  // 同步外部数据变化到内部状态
+  // Sync external data changes to internal state
   useEffect(() => {
     setNodes(initialNodes);
     setEdges(initialEdges);
   }, [initialNodes, initialEdges, setNodes, setEdges]);
 
-  // 侧边栏状态管理
+  // Sidebar state management
   const [sidebarMode, setSidebarMode] = useState<SidebarMode>(null);
   const [selectedNodeId, setSelectedNodeId] = useState<string>();
   const [connectionSource, setConnectionSource] = useState<string>();
   const [initialNodeData, setInitialNodeData] = useState<NodeData>();
 
-  // 子评论相关状态
+  // Child comment related state
   const [parentNodeData, setParentNodeData] = useState<NodeData>();
 
-  // 拖动位置更新相关状态
+  // Drag position update related state
   const [savingNodes, setSavingNodes] = useState<Set<string>>(new Set());
   const saveTimeoutRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
-  // 右键菜单相关状态
+  // Context menu related state
   const [contextMenu, setContextMenu] = useState<{
     visible: boolean;
     x: number;
@@ -125,12 +125,12 @@ function BoardWithProvider({
     [setEdges],
   );
 
-  // 保存节点位置到数据库
+  // Save node position to database
   const saveNodePosition = useCallback(
     async (nodeId: string, x: number, y: number) => {
       const topicId = removeTopicPrefix(nodeId);
 
-      // 添加到保存状态
+      // Add to saving state
       setSavingNodes((prev) => new Set([...prev, nodeId]));
 
       try {
@@ -149,14 +149,19 @@ function BoardWithProvider({
         const result = await response.json();
 
         if (result.success) {
-          console.log(`节点 ${topicId} 位置保存成功: (${x}, ${y})`);
+          console.log(
+            `Node ${topicId} position saved successfully: (${x}, ${y})`,
+          );
         } else {
-          console.error(`节点 ${topicId} 位置保存失败:`, result.message);
+          console.error(
+            `Failed to save node ${topicId} position:`,
+            result.message,
+          );
         }
       } catch (error) {
-        console.error(`节点 ${topicId} 位置保存错误:`, error);
+        console.error(`Error saving node ${topicId} position:`, error);
       } finally {
-        // 从保存状态中移除
+        // Remove from saving state
         setSavingNodes((prev) => {
           const newSet = new Set(prev);
           newSet.delete(nodeId);
@@ -167,34 +172,34 @@ function BoardWithProvider({
     [],
   );
 
-  // 防抖保存位置
+  // Debounced save position
   const debouncedSavePosition = useCallback(
     (nodeId: string, x: number, y: number) => {
-      // 清除之前的定时器
+      // Clear previous timer
       const existingTimeout = saveTimeoutRef.current.get(nodeId);
       if (existingTimeout) {
         clearTimeout(existingTimeout);
       }
 
-      // 设置新的定时器
+      // Set new timer
       const timeout = setTimeout(() => {
         saveNodePosition(nodeId, x, y);
         saveTimeoutRef.current.delete(nodeId);
-      }, 300); // 300ms 防抖
+      }, 300); // 300ms debounce
 
       saveTimeoutRef.current.set(nodeId, timeout);
     },
     [saveNodePosition],
   );
 
-  // 节点拖动结束
+  // Node drag end
   const onNodeDragEnd = useCallback(
     (event: React.MouseEvent, node: Node) => {
-      // 获取节点数据
+      // Get node data
       const nodeData = node.data as TopicNodeData;
       if (!nodeData.topic_id) return;
 
-      // 检查位置是否发生了实际变化
+      // Check if position actually changed
       const currentX = node.position.x;
       const currentY = node.position.y;
       const originalX = nodeData.x;
@@ -208,7 +213,7 @@ function BoardWithProvider({
 
       if (hasPositionChanged) {
         console.log(
-          `节点 ${node.id} 位置发生变化: (${originalX}, ${originalY}) -> (${currentX}, ${currentY})`,
+          `Node ${node.id} position changed: (${originalX}, ${originalY}) -> (${currentX}, ${currentY})`,
         );
         debouncedSavePosition(node.id, currentX, currentY);
       }
@@ -220,7 +225,7 @@ function BoardWithProvider({
     openSideTrowser();
   }, [openSideTrowser]);
 
-  // 更新节点
+  // Update node
   const handleUpdateNode = useCallback(
     (nodeId: string, data: NodeData) => {
       setNodes((nds) =>
@@ -243,13 +248,13 @@ function BoardWithProvider({
     [setNodes],
   );
 
-  // 节点点击事件
+  // Node click event
   const onNodeClick = useCallback(
     (event: React.MouseEvent, node: Node) => {
       const currentTopicId = removeTopicPrefix(node.id);
-      console.log("当前节点ID:", node.id, "Topic ID:", currentTopicId);
+      console.log("Current node ID:", node.id, "Topic ID:", currentTopicId);
       console.log(
-        "所有节点的parent_id信息:",
+        "All nodes parent_id info:",
         nodes.map((n) => ({
           nodeId: n.id,
           topic_id: removeTopicPrefix(n.id),
@@ -261,9 +266,9 @@ function BoardWithProvider({
       const childNodes = nodes.filter(
         (n) => (n.data as TopicNodeData).parent_id === currentTopicId,
       );
-      console.log("节点点击 - 子节点数量:", childNodes.length);
+      console.log("Node clicked - child node count:", childNodes.length);
 
-      // 设置选中的节点信息到 store
+      // Set selected node info to store
       setSelectedNode({
         id: node.id,
         type: node.type || "custom",
@@ -271,7 +276,7 @@ function BoardWithProvider({
         position: node.position,
       });
 
-      // 计算新子节点位置
+      // Calculate new child node position
       const childNodeData = createChildNodeData(
         node as ExtendedNode,
         "",
@@ -288,21 +293,21 @@ function BoardWithProvider({
     [nodes, openSideTrowser, updateForm, setSelectedNode, user],
   );
 
-  // 连接开始事件
+  // Connection start event
   const onConnectStart: OnConnectStart = useCallback((event, { nodeId }) => {
     setConnectionSource(nodeId || undefined);
   }, []);
 
-  // 连接结束事件（在空白区域结束）
+  // Connection end event (ends in empty area)
   const onConnectEnd = useCallback(
     (event: MouseEvent | TouchEvent) => {
-      // 获取坐标位置（支持鼠标和触摸事件）
+      // Get coordinate position (supports mouse and touch events)
       const clientX =
         "touches" in event ? event.touches[0]?.clientX || 0 : event.clientX;
       const clientY =
         "touches" in event ? event.touches[0]?.clientY || 0 : event.clientY;
 
-      // 检查是否在空白区域结束连接
+      // Check if connection ends in empty area
       const reactFlowBounds = (
         event.target as HTMLElement
       ).getBoundingClientRect();
@@ -318,46 +323,48 @@ function BoardWithProvider({
     [connectionSource],
   );
 
-  // 右键事件处理函数
+  // Right-click event handler
   const handleContextMenu = useCallback(
     (event: React.MouseEvent) => {
-      event.preventDefault(); // 阻止浏览器默认右键菜单
+      event.preventDefault(); // Prevent browser default context menu
 
-      // 获取点击位置相对于页面的坐标
+      // Get click position relative to page
       const clickX = event.clientX;
       const clickY = event.clientY;
 
-      // 将屏幕坐标转换为画布坐标
+      // Convert screen coordinates to canvas coordinates
       const canvasPosition = screenToFlowPosition({ x: clickX, y: clickY });
 
-      // 检查是否点击在节点上
+      // Check if clicked on node
       const target = event.target as HTMLElement;
       const isNode = target.closest(".react-flow__node");
 
-      // 构建菜单项
+      // Build menu items
       const menuItems: ContextMenuItem[] = [
         {
           id: "add-topic",
           label: "Add Topic",
           onClick: () => {
             console.log(
-              "添加主题，位置（画布坐标）at menuItem:",
+              "Add topic at position (canvas coordinates) at menuItem:",
               canvasPosition,
             );
-            // 清空选中的节点信息，只显示创建表单
+            // Clear selected node info, only show create form
             setSelectedNode(null);
             updateForm({
               parent_id: undefined,
               x: canvasPosition.x,
               y: canvasPosition.y,
             });
-            console.log("右键菜单调用updateForm后，立即打开侧边栏...");
+            console.log(
+              "After right-click menu calls updateForm, opening sidebar...",
+            );
             openSideTrowser();
           },
         },
       ];
 
-      // 显示右键菜单
+      // Show context menu
       if (!isNode) {
         setContextMenu({
           visible: true,
@@ -372,40 +379,45 @@ function BoardWithProvider({
     [screenToFlowPosition, openSideTrowser, setSelectedNode, updateForm],
   );
 
-  // 检查是否为触摸设备
+  // Check if touch device
   const isTouchEnabled = isTouchDevice();
 
-  // 处理长按显示右键菜单的函数
+  // Handle long press to show context menu
   const handleLongPressContextMenu = useCallback(
     (event: { clientX: number; clientY: number }) => {
-      // 获取点击位置
+      // Get click position
       const clickX = event.clientX;
       const clickY = event.clientY;
 
-      // 将屏幕坐标转换为画布坐标
+      // Convert screen coordinates to canvas coordinates
       const canvasPosition = screenToFlowPosition({ x: clickX, y: clickY });
 
-      // 构建菜单项（与右键菜单相同）
+      // Build menu items (same as right-click menu)
       const menuItems: ContextMenuItem[] = [
         {
           id: "add-topic",
           label: "Add Topic",
           onClick: () => {
-            console.log("长按添加主题，位置（画布坐标）:", canvasPosition);
-            // 清空选中的节点信息，只显示创建表单
+            console.log(
+              "Long press add topic at position (canvas coordinates):",
+              canvasPosition,
+            );
+            // Clear selected node info, only show create form
             setSelectedNode(null);
             updateForm({
               parent_id: undefined,
               x: canvasPosition.x,
               y: canvasPosition.y,
             });
-            console.log("长按菜单调用updateForm后，立即打开侧边栏...");
+            console.log(
+              "After long press menu calls updateForm, opening sidebar...",
+            );
             openSideTrowser();
           },
         },
       ];
 
-      // 显示右键菜单
+      // Show context menu
       setContextMenu({
         visible: true,
         x: clickX,
@@ -418,7 +430,7 @@ function BoardWithProvider({
     [screenToFlowPosition, openSideTrowser, setSelectedNode, updateForm],
   );
 
-  // 双击处理 - 用于在触摸设备上触发右键菜单
+  // Double click handling - to trigger context menu on touch devices
   const lastClickTimeRef = useRef<number>(0);
   const lastClickPositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
@@ -427,20 +439,20 @@ function BoardWithProvider({
       const currentTime = Date.now();
       const clickPosition = { x: event.clientX, y: event.clientY };
 
-      // 检查是否为双击（时间间隔 < 300ms，位置距离 < 10px）
+      // Check if double click (time interval < 300ms, position distance < 10px)
       const timeDiff = currentTime - lastClickTimeRef.current;
       const distance = Math.sqrt(
         Math.pow(clickPosition.x - lastClickPositionRef.current.x, 2) +
           Math.pow(clickPosition.y - lastClickPositionRef.current.y, 2),
       );
 
-      // 如果是双击且在触摸设备上，打开右键菜单
+      // If double click and on touch device, open context menu
       if (isTouchEnabled && timeDiff < 300 && distance < 10) {
         console.log("[Board] Double click detected, opening context menu");
         event.preventDefault();
         event.stopPropagation();
 
-        // 调用长按处理函数的逻辑
+        // Call long press handler logic
         handleLongPressContextMenu({
           clientX: event.clientX,
           clientY: event.clientY,
@@ -449,14 +461,14 @@ function BoardWithProvider({
         return;
       }
 
-      // 更新上次点击信息
+      // Update last click info
       lastClickTimeRef.current = currentTime;
       lastClickPositionRef.current = clickPosition;
     },
     [handleLongPressContextMenu, isTouchEnabled],
   );
 
-  // 长按手势处理
+  // Long press gesture handling
   const longPressHandlers = useLongPress({
     onLongPress: handleLongPressContextMenu,
     delay: 500,
@@ -464,12 +476,12 @@ function BoardWithProvider({
     moveThreshold: 10,
   });
 
-  // 添加调试日志
+  // Add debug logs
   useEffect(() => {
     console.log("[Board] Touch device detected:", isTouchEnabled);
   }, [isTouchEnabled]);
 
-  // 添加全局触摸事件监听器作为备选方案
+  // Add global touch event listeners as fallback
   useEffect(() => {
     if (!isTouchEnabled) return;
 
@@ -479,7 +491,7 @@ function BoardWithProvider({
         touches: e.touches.length,
       });
 
-      // 检查是否在ReactFlow区域内
+      // Check if within ReactFlow area
       const reactFlowElement = document.querySelector(".react-flow");
       const target = e.target as unknown as Node;
       if (
@@ -500,7 +512,7 @@ function BoardWithProvider({
       longPressHandlers.onTouchEnd();
     };
 
-    // 使用被动监听器来提高性能
+    // Use passive listeners for better performance
     document.addEventListener("touchstart", handleGlobalTouchStart, {
       passive: false,
     });
@@ -518,7 +530,7 @@ function BoardWithProvider({
     };
   }, [isTouchEnabled, longPressHandlers]);
 
-  // 触摸事件适配器，将React.TouchEvent转换为原生TouchEvent
+  // Touch event adapter, convert React.TouchEvent to native TouchEvent
   const touchStartHandler = useCallback(
     (event: React.TouchEvent<HTMLDivElement>) => {
       console.log("[Board] Touch start handler called:", {
@@ -528,7 +540,7 @@ function BoardWithProvider({
       });
 
       if (isTouchEnabled && longPressHandlers.onTouchStart) {
-        // 阻止ReactFlow的默认触摸行为
+        // Prevent ReactFlow default touch behavior
         event.preventDefault();
         const nativeEvent = event.nativeEvent;
         console.log("[Board] Calling longPressHandlers.onTouchStart");
@@ -563,7 +575,7 @@ function BoardWithProvider({
     [isTouchEnabled, longPressHandlers.onTouchEnd],
   );
 
-  // 关闭右键菜单的函数
+  // Close context menu function
   const closeContextMenu = useCallback(() => {
     setContextMenu({
       visible: false,
@@ -576,7 +588,7 @@ function BoardWithProvider({
 
   return (
     <div className="w-screen h-screen relative">
-      {/* SSE 连接状态指示器 */}
+      {/* SSE Connection Status Indicator */}
       <div className="absolute top-4 left-4 z-10 flex items-center space-x-2">
         <div
           className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -590,17 +602,17 @@ function BoardWithProvider({
           }`}
         >
           {connectionStatus === "connected"
-            ? "SSE 已连接"
+            ? "SSE Connected"
             : connectionStatus === "connecting"
-              ? "SSE 连接中..."
+              ? "SSE Connecting..."
               : connectionStatus === "error"
-                ? "SSE 错误"
-                : "SSE 未连接"}
+                ? "SSE Error"
+                : "SSE Disconnected"}
         </div>
         <div className="flex items-center space-x-2">
           {channelId && (
             <span className="text-xs text-gray-600 bg-white px-2 py-1 rounded shadow">
-              频道: {channelId}
+              Channel: {channelId}
             </span>
           )}
           {user && (
@@ -619,18 +631,20 @@ function BoardWithProvider({
         </div>
         {savingNodes.size > 0 && (
           <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded shadow animate-pulse">
-            正在保存 {savingNodes.size} 个节点位置...
+            Saving {savingNodes.size} node positions...
           </span>
         )}
       </div>
 
-      {/* SSE 错误提示 */}
+      {/* SSE Error Display */}
       {sseError && (
         <div className="absolute top-16 left-4 z-10 max-w-md">
           <div className="bg-red-50 border border-red-200 rounded-lg p-3 shadow-lg">
             <div className="flex justify-between items-start">
               <div className="flex-1">
-                <h4 className="text-sm font-medium text-red-800">连接错误</h4>
+                <h4 className="text-sm font-medium text-red-800">
+                  Connection Error
+                </h4>
                 <p className="text-xs text-red-600 mt-1">{sseError}</p>
               </div>
               {onSSEErrorClear && (
@@ -671,7 +685,7 @@ function BoardWithProvider({
 
       <SideTrowser />
 
-      {/* 右键上下文菜单 */}
+      {/* Context Menu */}
       <ContextMenu
         visible={contextMenu.visible}
         x={contextMenu.x}
@@ -683,7 +697,7 @@ function BoardWithProvider({
   );
 }
 
-// 主要的 Board 组件，包装 ReactFlowProvider
+// Main Board component, wrapped with ReactFlowProvider
 export default function Board(props: BoardProps) {
   return (
     <ReactFlowProvider>

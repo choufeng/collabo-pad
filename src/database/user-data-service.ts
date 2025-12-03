@@ -1,12 +1,12 @@
 /**
- * 简化的用户数据服务实现
- * 基于 Dexie.js 的用户数据管理
+ * Simplified user data service implementation
+ * User data management based on Dexie.js
  */
 
 import Dexie, { Table } from "dexie";
 import { User, UserSession } from "./types";
 
-// 简化的数据库类定义
+// Simplified database class definition
 export class CollaboPadDB extends Dexie {
   users!: Table<User>;
   userSessions!: Table<UserSession>;
@@ -14,7 +14,7 @@ export class CollaboPadDB extends Dexie {
   constructor() {
     super("collaboPadDBv2");
 
-    // 修复后的schema：使用自增主键避免键路径错误
+    // Fixed schema: use auto-increment primary key to avoid key path errors
     this.version(1).stores({
       users: "id, username, createdAt",
       userSessions: "++id, currentUserId, lastActiveAt",
@@ -22,7 +22,7 @@ export class CollaboPadDB extends Dexie {
   }
 }
 
-// 简化的用户数据服务接口
+// Simplified user data service interface
 export interface UserDataService {
   createOrGetUser(username: string): Promise<User>;
   getCurrentUser(): Promise<User | null>;
@@ -31,7 +31,7 @@ export interface UserDataService {
   clearUserData(): Promise<void>;
 }
 
-// 简化的用户数据服务实现
+// Simplified user data service implementation
 export class UserDataServiceImpl implements UserDataService {
   private db: CollaboPadDB;
 
@@ -42,19 +42,19 @@ export class UserDataServiceImpl implements UserDataService {
   async createOrGetUser(username: string): Promise<User> {
     const trimmedUsername = username.trim();
 
-    // 查找现有用户
+    // Find existing user
     const existingUser = await this.db.users
       .where("username")
       .equals(trimmedUsername)
       .first();
 
     if (existingUser) {
-      // 更新会话
+      // Update session
       await this.updateSession(existingUser.id);
       return existingUser;
     }
 
-    // 创建新用户
+    // Create new user
     const newUser: User = {
       id: this.generateUUID(),
       username: trimmedUsername,
@@ -68,7 +68,7 @@ export class UserDataServiceImpl implements UserDataService {
 
   async getCurrentUser(): Promise<User | null> {
     try {
-      // 按 lastActiveAt 降序获取最后活跃的会话
+      // Get most recently active session by lastActiveAt descending
       const sessions = await this.db.userSessions
         .orderBy("lastActiveAt")
         .reverse()

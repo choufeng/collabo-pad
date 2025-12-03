@@ -109,7 +109,7 @@ export interface Topic {
 }
 
 export interface CreateTopicRequest {
-  parent_id?: string;
+  parent_id?: string | null;
   channel_id: string;
   content: string;
   user_id: string;
