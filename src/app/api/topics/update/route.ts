@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { topicService } from "@/services/TopicService";
 import type { Topic } from "@/types/redis-stream";
+import { toNull } from "@/utils/null-conversion";
 
 export interface UpdateTopicRequest {
   id: string;
@@ -160,35 +161,35 @@ export async function PUT(request: NextRequest) {
     const updateData: any = {};
 
     if (sanitizedContent !== undefined) {
-      updateData.content = sanitizedContent.trim();
+      updateData.content = toNull(sanitizedContent.trim());
     }
 
     if (translated_content !== undefined) {
-      updateData.translatedContent = translated_content.trim();
+      updateData.translatedContent = toNull(translated_content.trim());
     }
 
     if (x !== undefined) {
-      updateData.x = x.toString();
+      updateData.x = toNull(x.toString());
     }
 
     if (y !== undefined) {
-      updateData.y = y.toString();
+      updateData.y = toNull(y.toString());
     }
 
     if (w !== undefined) {
-      updateData.w = w.toString();
+      updateData.w = toNull(w.toString());
     }
 
     if (h !== undefined) {
-      updateData.h = h.toString();
+      updateData.h = toNull(h.toString());
     }
 
     if (metadata !== undefined) {
-      updateData.metadata = metadata;
+      updateData.metadata = toNull(metadata);
     }
 
     if (tags !== undefined) {
-      updateData.tags = tags.filter((tag) => typeof tag === "string");
+      updateData.tags = toNull(tags.filter((tag) => typeof tag === "string"));
     }
 
     // 如果没有需要更新的字段，返回错误

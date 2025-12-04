@@ -2,6 +2,8 @@ import { db } from "../database/drizzle";
 import { topics } from "../database/schema";
 import { eq, and, isNull, not, desc } from "drizzle-orm";
 import type { NewTopic, Topic } from "../database/schema";
+import { handleDatabaseError, withRetry } from "../utils/DatabaseError";
+import { toNullObject } from "../utils/null-conversion";
 
 export interface TopicHierarchyNode extends Topic {
   children: TopicHierarchyNode[];
@@ -42,12 +44,15 @@ export class TopicService {
    */
   async create(data: CreateTopicData): Promise<Topic> {
     try {
+      // 转换空值为 null，确保数据库一致性
+      const cleanData = toNullObject({
+        ...data,
+        id: undefined, // Let database generate UUID
+      });
+
       const result = await db
         .insert(topics)
-        .values({
-          ...data,
-          id: undefined, // Let database generate UUID
-        })
+        .values(cleanData as NewTopic)
         .returning();
 
       if (result.length === 0) {
@@ -87,20 +92,41 @@ export class TopicService {
    * Find all topics for a specific channel
    */
   async findByChannelId(channelId: string): Promise<Topic[]> {
-    try {
-      const result = await db
-        .select()
-        .from(topics)
-        .where(eq(topics.channelId, channelId))
-        .orderBy(desc(topics.updatedAt));
+    return withRetry(
+      async () => {
+        try {
+          const result = await db
+            .select()
+            .from(topics)
+            .where(eq(topics.channelId, channelId))
+            .orderBy(desc(topics.updatedAt));
 
-      return result;
-    } catch (error) {
-      console.error("Error finding topics by channel ID:", error);
-      throw new Error(
-        `Failed to find topics for channel: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
-    }
+          console.log(`Found ${result.length} topics for channel ${channelId}`);
+          return result;
+        } catch (error) {
+          const dbError = handleDatabaseError(error);
+          console.error(
+            `Error finding topics for channel ${channelId}:`,
+            dbError.message,
+          );
+          throw dbError;
+        }
+      },
+      {
+        maxAttempts: 3,
+        delay: 1000,
+        shouldRetry: (error, attempt) => {
+          const dbError = handleDatabaseError(error);
+          const isRetryable = dbError.isTransient() && attempt < 3;
+          if (isRetryable) {
+            console.log(
+              `Retrying findByChannelId for channel ${channelId}, attempt ${attempt + 1}/3`,
+            );
+          }
+          return isRetryable;
+        },
+      },
+    );
   }
 
   /**
@@ -192,12 +218,15 @@ export class TopicService {
    */
   async update(id: string, data: UpdateTopicData): Promise<Topic | null> {
     try {
+      // 转换空值为 null，确保数据库一致性
+      const cleanData = toNullObject({
+        ...data,
+        updatedAt: new Date(), // Explicitly update the timestamp
+      });
+
       const result = await db
         .update(topics)
-        .set({
-          ...data,
-          updatedAt: new Date(), // Explicitly update the timestamp
-        })
+        .set(cleanData)
         .where(eq(topics.id, id))
         .returning();
 

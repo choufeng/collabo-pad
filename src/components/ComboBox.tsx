@@ -224,8 +224,9 @@ export function ComboBox({
   }, [highlightedIndex]);
 
   // 输入框样式
-  const inputClassName = `w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${error ? "border-red-300" : "border-gray-300"
-    } ${disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"} ${className}`;
+  const inputClassName = `w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+    error ? "border-red-300" : "border-gray-300"
+  } ${disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"} ${className}`;
 
   return (
     <div className="relative">
@@ -299,10 +300,11 @@ export function ComboBox({
           {filteredOptions.map((option, index) => (
             <li
               key={option.value}
-              className={`px-3 py-2 cursor-pointer transition-colors ${highlightedIndex === index
+              className={`px-3 py-2 cursor-pointer transition-colors ${
+                highlightedIndex === index
                   ? "bg-blue-100 text-blue-900"
                   : "hover:bg-gray-100"
-                }`}
+              }`}
               onClick={() => handleOptionSelect(option)}
               role="option"
               aria-selected={highlightedIndex === index}
@@ -314,10 +316,11 @@ export function ComboBox({
           {/* 创建新用户选项 */}
           {showCreateOption && (
             <li
-              className={`px-3 py-2 cursor-pointer transition-colors border-t border-gray-200 ${highlightedIndex === filteredOptions.length
+              className={`px-3 py-2 cursor-pointer transition-colors border-t border-gray-200 ${
+                highlightedIndex === filteredOptions.length
                   ? "bg-green-100 text-green-900"
                   : "hover:bg-gray-100"
-                }`}
+              }`}
               onClick={handleCreateOption}
               role="option"
               aria-selected={highlightedIndex === filteredOptions.length}
