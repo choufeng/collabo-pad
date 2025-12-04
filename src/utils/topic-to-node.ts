@@ -3,7 +3,7 @@
  */
 
 import { Node, Edge, Position } from "@xyflow/react";
-import type { Topic } from "@/types/topic";
+import type { Topic } from "@/types/redis-stream";
 import { ExtendedNode } from "./node-hierarchy";
 
 /**

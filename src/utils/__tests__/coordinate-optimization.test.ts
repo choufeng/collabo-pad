@@ -3,7 +3,7 @@
  */
 
 import { topicsToFlowElements } from "../topic-to-node";
-import type { Topic } from "@/types/topic";
+import type { Topic } from "@/types/redis-stream";
 
 describe("coordinate optimization", () => {
   // 模拟 Topic 数据

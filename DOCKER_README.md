@@ -7,7 +7,7 @@
 ```bash
 # 1. 配置环境变量
 cp .env.production.example .env.production
-# 编辑 .env.production 配置你的 PostgreSQL 连接
+# 编辑 .env.production 配置你的 PostgreSQL 和 Redis 连接
 
 # 2. 启动应用
 docker-compose up -d
@@ -30,7 +30,7 @@ curl http://localhost:3000/api/health
 
 ✅ **多阶段构建** - 优化的生产镜像（< 500MB）
 ✅ **健康检查** - 自动监控应用和数据库状态
-✅ **环境变量配置** - 支持外部 PostgreSQL
+✅ **环境变量配置** - 支持外部 PostgreSQL 和 Redis
 ✅ **安全配置** - 非 root 用户运行，资源限制
 ✅ **云平台就绪** - 支持 AWS ECS、Google Cloud Run、Azure
 ✅ **测试脚本** - 自动化部署验证
@@ -42,8 +42,8 @@ curl http://localhost:3000/api/health
 
 ## ⚠️ 重要提醒
 
-- **外部服务**: 本配置使用外部 PostgreSQL，不包含容器化数据库
-- **环境变量**: 必须配置正确的数据库连接信息
+- **外部服务**: 本配置使用外部 PostgreSQL 和 Redis，不包含容器化数据库
+- **环境变量**: 必须配置正确的数据库和 Redis 连接信息
 - **端口**: 默认使用 3000 端口，可通过环境变量修改
 
 ---

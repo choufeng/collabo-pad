@@ -3,7 +3,7 @@ import type {
   CreateTopicRequest,
   CreateTopicResponse,
   Topic,
-} from "../../src/types/topic";
+} from "../../src/types/redis-stream";
 
 // Mock API 响应数据生成器
 export const createMockTopic = (overrides: Partial<Topic> = {}): Topic => ({

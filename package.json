@@ -22,6 +22,7 @@
     "dexie": "^4.2.1",
     "drizzle-orm": "^0.44.7",
     "highlight.js": "^11.11.1",
+    "ioredis": "^5.8.2",
     "langchain": "^1.0.6",
     "next": "16.0.3",
     "pg": "^8.16.3",

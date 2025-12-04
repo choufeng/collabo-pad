@@ -10,8 +10,8 @@ import { useParams, useRouter } from "next/navigation";
 import Board from "@/components/Board";
 import { useUserStore } from "@/stores/user-store";
 import { userDataService } from "@/database/user-data-service";
+import { useSSETopics } from "@/hooks/use-sse-topics";
 import { topicsToFlowElements } from "@/utils/topic-to-node";
-import type { Topic } from "@/types/topic";
 
 export default function BoardPage() {
   const params = useParams();
@@ -23,8 +23,18 @@ export default function BoardPage() {
   const [isValidating, setIsValidating] = useState(true);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  // 暂时使用空的主题数据，后续可以集成数据库查询
-  const topics: Topic[] = [];
+  // 使用 SSE Hook 获取实时主题数据
+  const {
+    topics,
+    connectionStatus,
+    error: sseError,
+    connect,
+    disconnect,
+    clearError,
+  } = useSSETopics({
+    channelId,
+    maxTopics: 100,
+  });
 
   useEffect(() => {
     const validateAndInitialize = async () => {
@@ -106,6 +116,9 @@ export default function BoardPage() {
       initialNodes={nodes}
       initialEdges={edges}
       channelId={channelId}
+      connectionStatus={connectionStatus}
+      sseError={sseError}
+      onSSEErrorClear={clearError}
       user={
         currentUser
           ? {
