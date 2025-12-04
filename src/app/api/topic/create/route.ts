@@ -24,11 +24,15 @@ export async function POST(request: NextRequest) {
     } = body as CreateTopicRequest;
 
     // 基本参数验证
-    if (!channel_id || typeof channel_id !== "string") {
+    if (
+      !channel_id ||
+      typeof channel_id !== "string" ||
+      channel_id.trim().length === 0
+    ) {
       return NextResponse.json(
         {
           success: false,
-          message: "频道ID是必需的且必须是字符串",
+          message: "频道ID是必需的且不能为空",
           error: "MISSING_CHANNEL_ID",
           topic: {} as any,
           messageId: "",
@@ -67,11 +71,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!user_id || typeof user_id !== "string") {
+    if (
+      !user_id ||
+      typeof user_id !== "string" ||
+      user_id.trim().length === 0
+    ) {
       return NextResponse.json(
         {
           success: false,
-          message: "用户ID是必需的",
+          message: "用户ID是必需的且不能为空",
           error: "MISSING_USER_ID",
           topic: {} as any,
           messageId: "",
@@ -80,11 +88,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!user_name || typeof user_name !== "string") {
+    if (
+      !user_name ||
+      typeof user_name !== "string" ||
+      user_name.trim().length === 0
+    ) {
       return NextResponse.json(
         {
           success: false,
-          message: "用户名是必需的",
+          message: "用户名是必需的且不能为空",
           error: "MISSING_USER_NAME",
           topic: {} as any,
           messageId: "",
