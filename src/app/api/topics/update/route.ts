@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { topicService } from "@/services/TopicService";
-import type { Topic } from "@/types/redis-stream";
+import type { Topic } from "@/types/topic";
 import { toNull } from "@/utils/null-conversion";
 
 export interface UpdateTopicRequest {

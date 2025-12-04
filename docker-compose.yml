@@ -48,4 +48,4 @@ networks:
   collabo-network:
     driver: bridge
     name: collabo-pad-network
-# Use external services (Redis, PostgreSQL) instead of containerized ones
+# Use external services (PostgreSQL) instead of containerized ones

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import Redis from "ioredis";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { topicService } from "@/services/TopicService";
@@ -39,7 +38,6 @@ interface HealthStatus {
   services: {
     app: "ok" | "error";
     database?: "ok" | "error" | "not_configured";
-    redis?: "ok" | "error" | "not_configured";
     topics_api?: "ok" | "error";
   };
   details?: {
@@ -122,39 +120,6 @@ async function checkTopicsAPI(): Promise<"ok" | "error"> {
   }
 }
 
-// Check Redis connection
-async function checkRedisConnection(): Promise<
-  "ok" | "error" | "not_configured"
-> {
-  try {
-    const redisHost = process.env.REDIS_HOST;
-    const redisPort = process.env.REDIS_PORT || "6379";
-
-    if (!redisHost) {
-      console.warn("Redis not configured");
-      return "not_configured";
-    }
-
-    const redis = new Redis({
-      host: redisHost,
-      port: parseInt(redisPort),
-      password: process.env.REDIS_PASSWORD,
-      db: parseInt(process.env.REDIS_DB || "0"),
-      connectTimeout: 5000, // 5 seconds timeout
-      lazyConnect: true,
-    });
-
-    // Test connection
-    await redis.ping();
-    await redis.quit();
-
-    return "ok";
-  } catch (error) {
-    console.error("Redis health check failed:", error);
-    return "error";
-  }
-}
-
 // Main health check handler
 export async function GET(
   request: NextRequest,
@@ -163,15 +128,12 @@ export async function GET(
 
   try {
     // Check all services in parallel for better performance
-    const [dbStatus, redisStatus, topicsStatus] = await Promise.allSettled([
+    const [dbStatus, topicsStatus] = await Promise.allSettled([
       checkDatabaseConnection(),
-      checkRedisConnection(),
       checkTopicsAPI(),
     ]);
 
     const database = dbStatus.status === "fulfilled" ? dbStatus.value : "error";
-    const redis =
-      redisStatus.status === "fulfilled" ? redisStatus.value : "error";
     const topics_api =
       topicsStatus.status === "fulfilled" ? topicsStatus.value : "error";
 
@@ -179,7 +141,6 @@ export async function GET(
     const services = {
       app: "ok" as const,
       database,
-      redis,
       topics_api,
     };
 

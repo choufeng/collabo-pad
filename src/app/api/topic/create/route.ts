@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { topicService } from "@/services/TopicService";
-import type {
-  CreateTopicRequest,
-  CreateTopicResponse,
-} from "@/types/redis-stream";
+import type { CreateTopicRequest, CreateTopicResponse } from "@/types/topic";
 import { aiService } from "@/lib/ai-service";
 import { systemPrompt } from "@/utils/translate-prompts";
 import { toNull } from "@/utils/null-conversion";

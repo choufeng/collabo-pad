@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { topicService } from "@/services/TopicService";
-import type { Topic, SSEMessage } from "@/types/redis-stream";
+import type { Topic, SSEMessage } from "@/types/topic";
 
 export async function GET(
   request: NextRequest,
