@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { topicService } from "@/services/TopicService";
-import type { ChannelTopicsResponse } from "@/types/redis-stream";
+import type { ChannelTopicsResponse } from "@/types/topic";
 
 export async function GET(
   request: NextRequest,
@@ -69,6 +69,7 @@ export async function GET(
 
     // 构建响应
     const response: ChannelTopicsResponse = {
+      success: true,
       topics: convertedTopics,
       total: convertedTopics.length,
       channel_id: channelId,

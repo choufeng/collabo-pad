@@ -9,7 +9,7 @@ import {
   createParentChildEdge,
   optimizeEdgePaths,
 } from "@/utils/topic-to-node";
-import type { Topic } from "@/types/redis-stream";
+import type { Topic } from "@/types/topic";
 
 describe("Topic-to-node 转换工具", () => {
   // 创建测试数据

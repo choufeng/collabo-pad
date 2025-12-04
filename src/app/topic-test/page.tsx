@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import type { Topic, SSEMessage } from "@/types/redis-stream";
+import type { Topic, SSEMessage } from "@/types/topic";
 
 export default function TopicTestPage() {
   const [topics, setTopics] = useState<Topic[]>([]);
@@ -73,16 +73,16 @@ export default function TopicTestPage() {
           // 处理不同类型的消息
           switch (sseMessage.type) {
             case "topic_created":
-              if (sseMessage.data) {
+              if (sseMessage.data && "content" in sseMessage.data) {
                 setTopics((prev) => {
-                  const newTopics = [sseMessage.data, ...prev];
+                  const newTopics = [sseMessage.data as Topic, ...prev];
                   return newTopics.slice(0, 100); // 只保留最新100个主题
                 });
               }
               break;
             case "history_data":
-              if (sseMessage.data?.topics) {
-                setTopics(sseMessage.data.topics);
+              if (sseMessage.data && "topics" in sseMessage.data) {
+                setTopics((sseMessage.data as { topics: Topic[] }).topics);
               }
               break;
             case "error":

@@ -1,7 +1,4 @@
-import type {
-  CreateTopicRequest,
-  CreateTopicResponse,
-} from "@/types/redis-stream";
+import type { CreateTopicRequest, CreateTopicResponse } from "@/types/topic";
 
 // 创建主题的API调用函数
 export async function createTopicAPI(
