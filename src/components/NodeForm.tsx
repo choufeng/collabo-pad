@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useSideTrowserStore } from "@/stores/side-trowser-store";
 import { useUserStore } from "@/stores/user-store";
 import { createTopicAPI } from "@/lib/topicApi";
-import type { CreateTopicRequest } from "@/types/topic";
+import type { CreateTopicRequest } from "@/types/redis-stream";
 import { BaseComponentProps } from "@/types";
 
 interface NodeFormProps extends BaseComponentProps {
