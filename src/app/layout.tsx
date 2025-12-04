@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { initializeApp } from "@/database/startup";
+
+// 在应用启动时初始化数据库连接验证
+initializeApp().catch((error) => {
+  console.error("Failed to initialize application:", error);
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

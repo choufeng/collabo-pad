@@ -6,6 +6,7 @@ import type {
 } from "@/types/redis-stream";
 import { aiService } from "@/lib/ai-service";
 import { systemPrompt } from "@/utils/translate-prompts";
+import { toNull } from "@/utils/null-conversion";
 
 export async function POST(request: NextRequest) {
   try {
@@ -234,16 +235,33 @@ export async function POST(request: NextRequest) {
         username: createRequest.user_name,
         content: createRequest.content,
         translatedContent: finalTranslatedContent,
-        parentId:
+        parentId: toNull(
           createRequest.parent_id && createRequest.parent_id.trim()
             ? createRequest.parent_id.trim()
-            : null,
-        x: createRequest.x !== undefined ? createRequest.x.toString() : null,
-        y: createRequest.y !== undefined ? createRequest.y.toString() : null,
-        w: createRequest.w !== undefined ? createRequest.w.toString() : null,
-        h: createRequest.h !== undefined ? createRequest.h.toString() : null,
-        metadata: createRequest.metadata || null,
-        tags: createRequest.tags || null,
+            : undefined,
+        ),
+        x: toNull(
+          createRequest.x !== undefined
+            ? createRequest.x.toString()
+            : undefined,
+        ),
+        y: toNull(
+          createRequest.y !== undefined
+            ? createRequest.y.toString()
+            : undefined,
+        ),
+        w: toNull(
+          createRequest.w !== undefined
+            ? createRequest.w.toString()
+            : undefined,
+        ),
+        h: toNull(
+          createRequest.h !== undefined
+            ? createRequest.h.toString()
+            : undefined,
+        ),
+        metadata: toNull(createRequest.metadata),
+        tags: toNull(createRequest.tags),
       });
 
       // 直接使用数据库格式，无需转换

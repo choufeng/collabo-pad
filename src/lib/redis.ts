@@ -1,5 +1,6 @@
 import Redis from "ioredis";
 import type { StreamMessage, StreamInfo } from "@/types/redis-stream";
+import { filterEmptyFields } from "@/utils/null-conversion";
 
 export interface RedisConfig {
   host: string;
@@ -159,10 +160,13 @@ export class RedisService {
       throw new Error("Redis客户端未初始化");
     }
 
+    // 过滤掉空值字段，避免向Redis写入空字符串
+    const cleanData = filterEmptyFields(data);
+
     const result = await this.client.xadd(
       streamKey,
       "*",
-      ...Object.entries(data).flat(),
+      ...Object.entries(cleanData).flat(),
     );
 
     return result || "";
